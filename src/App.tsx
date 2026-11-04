@@ -95,7 +95,7 @@ function buildNav(role: Role): NavItem[] {
     }
 
     // Daily reports: foreman submits; admin/engineer reads
-    nav.push({ to: '/app/reports',  label: 'Журнал объекта',       icon: ClipboardList });
+    if (role !== 'SUPPLY_MANAGER') nav.push({ to: '/app/reports', label: 'Журнал объекта', icon: ClipboardList });
   }
 
   // ── Sales CRM ─────────────────────────────────────────────────────────────
@@ -154,6 +154,8 @@ function resolveSalesPage(path: string) {
     case '/sales':             return <SalesDashboardPage />;
     case '/sales/chessboard':  return <ChessboardPage />;
     case '/sales/leads':       return <LeadsPipelinePage />;
+    case '/sales/leads/new':   return <LeadsPipelinePage initialCreate />;
+    case '/sales/pipeline':    return <Redirect to="/sales/leads" />;
     case '/sales/analytics':   return <SalesAnalyticsPage />;
     default:                   return null;
   }
@@ -223,6 +225,9 @@ export default function App() {
   if (path === '/app' || path.startsWith('/app/')) {
     // Pure sales roles should land on /sales, not /app dashboard
     if (role === 'SALES_MANAGER' || role === 'SALES_LEAD') return <Redirect to="/sales" />;
+    if (path === '/app/expenses' && !['COMPANY_ADMIN','ENGINEER','SUPPLY_MANAGER'].includes(role)) return <Redirect to="/app" />;
+    if (['/app/team','/app/billing','/app/settings'].includes(path) && role !== 'COMPANY_ADMIN') return <Redirect to="/app" />;
+    if ((DRAWING_ROUTE.test(path) || path === '/app/reports') && (path === '/app/reports' ? role === 'SUPPLY_MANAGER' : !['COMPANY_ADMIN','ENGINEER'].includes(role))) return <Redirect to="/app" />;
     const page = resolveConstructionPage(path);
     if (!page) return <Redirect to="/app" />;
     return (
