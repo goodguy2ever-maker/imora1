@@ -120,8 +120,9 @@ export default function RequestsPipelineTab() {
       untilDate.setDate(untilDate.getDate() + days);
       const accessUntilIso = untilDate.toISOString().slice(0, 10);
 
-      // Call edge function or direct RPC to create company and admin
-      const res = await callManageUsers('create_company', {
+      // Create company and admin through the authenticated edge function.
+      await callManageUsers<{ company_id: string }>({
+        action: 'create_company',
         company_name: companyName.trim(),
         city: 'Город не указан',
         contact_email: adminEmail.trim(),
@@ -134,10 +135,6 @@ export default function RequestsPipelineTab() {
         admin_full_name: adminName.trim(),
         admin_position: activeRequest.position || 'Руководитель',
       });
-
-      if (!res.ok) {
-        throw new Error(res.error || 'Не удалось создать компанию.');
-      }
 
       // Mark request as approved in database
       await updateStatus(activeRequest.id, 'approved');

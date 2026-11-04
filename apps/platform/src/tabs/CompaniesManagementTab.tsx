@@ -66,26 +66,28 @@ export default function CompaniesManagementTab() {
     event.preventDefault();
     setFormError('');
     setSaving(true);
-    const res = await callManageUsers('create_company', {
-      company_name: cName.trim(),
-      city: cCity.trim() || null,
-      contact_email: cEmail.trim() || null,
-      contact_phone: cPhone.trim() || null,
-      status: cStatus,
-      access_until: cAccessUntil,
-      user_limit: parseInt(cLimit, 10),
-      admin_email: aEmail.trim(),
-      admin_password: aPassword,
-      admin_full_name: aName.trim(),
-      admin_position: aPosition.trim() || null,
-    });
-    setSaving(false);
-    if (!res.ok) {
-      setFormError(res.error ?? 'Не удалось создать компанию');
-      return;
+    try {
+      await callManageUsers<{ company_id: string }>({
+        action: 'create_company',
+        company_name: cName.trim(),
+        city: cCity.trim() || null,
+        contact_email: cEmail.trim() || null,
+        contact_phone: cPhone.trim() || null,
+        status: cStatus,
+        access_until: cAccessUntil,
+        user_limit: parseInt(cLimit, 10),
+        admin_email: aEmail.trim(),
+        admin_password: aPassword,
+        admin_full_name: aName.trim(),
+        admin_position: aPosition.trim() || null,
+      });
+      setCreateOpen(false);
+      await load();
+    } catch (err) {
+      setFormError(errorMessage(err));
+    } finally {
+      setSaving(false);
     }
-    setCreateOpen(false);
-    void load();
   }
 
   function openAccess(c: PlatformCompany) {
