@@ -1,15 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
-  ShieldCheck,
   Users,
   Building2,
   DollarSign,
   Activity,
   LogOut,
   ExternalLink,
-  Layers,
   Terminal,
-  Zap,
   Server
 } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -17,23 +14,14 @@ import RequestsPipelineTab from './tabs/RequestsPipelineTab';
 import CompaniesManagementTab from './tabs/CompaniesManagementTab';
 import PlatformFinancesTab from './tabs/PlatformFinancesTab';
 import SystemAuditTab from './tabs/SystemAuditTab';
-import { PLATFORM_AUTH_STORAGE_KEY } from './SuperAdminGate';
+import { useAuth } from '@/context/useAuth';
 
 type Tab = 'requests' | 'companies' | 'billing' | 'audit';
 
 export default function PlatformConsole({ onSignOut }: { onSignOut: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('requests');
-  const [adminUser, setAdminUser] = useState<string>('root@imora.pro');
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(PLATFORM_AUTH_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.email) setAdminUser(parsed.email);
-      }
-    } catch {}
-  }, []);
+  const { session } = useAuth();
+  const adminUser = session?.user.email ?? 'Администратор платформы';
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased">

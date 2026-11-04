@@ -11,10 +11,8 @@ import {
   Package,
   Receipt,
   Settings,
-  Truck,
   Users,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/useAuth';
 import {
@@ -58,8 +56,7 @@ import LeadsPipelinePage from '@/pages/sales/LeadsPipelinePage';
 import LeadDetailPage from '@/pages/sales/LeadDetailPage';
 import SalesAnalyticsPage from '@/pages/sales/SalesAnalyticsPage';
 
-// Autonomous Superadmin Platform (Part 2)
-import SuperAdminGate, { PLATFORM_AUTH_STORAGE_KEY } from '../apps/platform/src/SuperAdminGate';
+// Superadmin platform shares Supabase authentication with the workspace.
 import PlatformConsole from '../apps/platform/src/PlatformConsole';
 
 // ─── ROUTE MATCHERS ───────────────────────────────────────────────────────────
@@ -166,40 +163,6 @@ function resolveSalesPage(path: string) {
 export default function App() {
   const path = usePathname();
   const { session, access, accessError, loading, signOut } = useAuth();
-  const [platformGateAuth, setPlatformGateAuth] = useState(false);
-
-  // Restore autonomous platform superadmin session from sessionStorage
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(PLATFORM_AUTH_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as { authenticated?: boolean };
-        if (parsed.authenticated) setPlatformGateAuth(true);
-      }
-    } catch {
-      // ignore
-    }
-  }, [path]);
-
-  // ── Autonomous Superadmin Platform (isolated entry) ────────────────────────
-  // Accessed via /platform-gate — completely separate from /login
-  // SUPER_ADMIN users who authenticated via Supabase also get directed here
-  if (path === '/platform-gate' || path.startsWith('/admin')) {
-    if (platformGateAuth || access?.role === 'SUPER_ADMIN') {
-      return (
-        <PlatformConsole
-          onSignOut={() => {
-            sessionStorage.removeItem(PLATFORM_AUTH_STORAGE_KEY);
-            setPlatformGateAuth(false);
-            if (session) void signOut();
-            window.location.href = '/platform-gate';
-          }}
-        />
-      );
-    }
-    return <SuperAdminGate onAuthenticated={() => setPlatformGateAuth(true)} />;
-  }
-
   // ── Public routes ──────────────────────────────────────────────────────────
   if (path === '/')               return <LandingPage />;
   if (path === '/login')          return loading ? <Spinner /> : <LoginPage />;
@@ -232,6 +195,15 @@ export default function App() {
   if (blocked) return <StatusScreen title="Доступ ограничен" message={blocked} onSignOut={signOut} />;
 
   const role = access.role;
+  const isPlatformRoute = path === '/platform-gate' || path === '/admin' || path.startsWith('/admin/');
+
+  if (isPlatformRoute) {
+    if (role !== 'SUPER_ADMIN') {
+      return <StatusScreen title="Доступ запрещён" message="Этот раздел доступен только администратору платформы." onSignOut={signOut} />;
+    }
+    return <PlatformConsole onSignOut={() => void signOut()} />;
+  }
+  if (role === 'SUPER_ADMIN') return <Redirect to="/admin" />;
   const nav  = buildNav(role);
   const companyTitle = access.company_name ?? 'Компания';
 
