@@ -1,18 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  Ruler,
-  Building,
-  CheckCircle2,
-  Sparkles,
-  ArrowRight,
-  Maximize2,
-  Play,
-  RotateCcw,
-  Sliders,
-  Compass,
-  FileSpreadsheet,
-  Cpu
-} from 'lucide-react';
+import { Ruler, Building, CheckCircle2, Sparkles, ArrowRight, Play, RotateCcw, Sliders, Compass, FileSpreadsheet, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 type ViewMode = 'stages' | 'slider';

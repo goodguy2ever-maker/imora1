@@ -21,7 +21,7 @@ const NEXT_ACTIONS: Record<string, { to: string; label: string; adminOnly?: bool
 };
 
 export default function MaterialsPage() {
-  const { access } = useAuth();
+  const { access, session } = useAuth();
   const { projects, loading: projLoading } = useProjects();
   const [items, setItems] = useState<MaterialRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,9 @@ export default function MaterialsPage() {
   const [supplier, setSupplier] = useState('');
   const [neededBy, setNeededBy] = useState('');
   const [notes, setNotes] = useState('');
+  const [editing, setEditing] = useState<MaterialRequest | null>(null);
+  const [editSupplier, setEditSupplier] = useState('');
+  const [editPrice, setEditPrice] = useState('');
 
   const isAdmin = access?.role === 'COMPANY_ADMIN';
 
@@ -89,6 +92,16 @@ export default function MaterialsPage() {
     else await load();
   }
 
+  async function saveSupplier(event: FormEvent) {
+    event.preventDefault(); if (!editing) return;
+    setSaving(true); setFormError('');
+    try {
+      const { error: failure } = await supabase.from('material_requests').update({ supplier: editSupplier.trim() || null, estimated_unit_price: editPrice ? Number(editPrice) : null }).eq('id', editing.id).select('id').single();
+      if (failure) throw failure;
+      setEditing(null); await load();
+    } catch (err) { setFormError(errorMessage(err)); } finally { setSaving(false); }
+  }
+
   const projectMap = new Map(projects.map((p) => [p.id, p]));
 
   return (
@@ -110,7 +123,11 @@ export default function MaterialsPage() {
           <Table head={['Материал', 'Проект', 'Кол-во', 'Поставщик', 'Срок', 'Статус', 'Действия']}>
             {items.map((r) => {
               const actions = NEXT_ACTIONS[r.status] ?? [];
-              const visibleActions = isAdmin ? actions : actions.filter((a) => !a.adminOnly);
+              const visibleActions = actions.filter(a => {
+                if (['ordered','delivered'].includes(a.to)) return isAdmin || access?.role === 'SUPPLY_MANAGER';
+                if (a.adminOnly) return isAdmin;
+                return isAdmin || r.created_by === session?.user.id;
+              });
               return (
                 <tr key={r.id} className="hover:bg-slate-800/60">
                   <Td className="font-medium">{r.title}</Td>
@@ -121,6 +138,7 @@ export default function MaterialsPage() {
                   <Td><Badge tone={statusTone(r.status)}>{MATERIAL_STATUS_LABELS[r.status]}</Badge></Td>
                   <Td>
                     <div className="flex flex-wrap gap-1.5">
+                      {(isAdmin || access?.role === 'SUPPLY_MANAGER') && ['approved','ordered'].includes(r.status) && <Button variant="secondary" onClick={() => { setEditing(r); setEditSupplier(r.supplier ?? ''); setEditPrice(r.estimated_unit_price == null ? '' : String(r.estimated_unit_price)); setFormError(''); }}>Поставщик и цена</Button>}
                       {visibleActions.map((a) => (
                         <button key={a.to} onClick={() => void changeStatus(r.id, a.to)}
                           className="rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300 hover:bg-slate-700">
@@ -168,6 +186,13 @@ export default function MaterialsPage() {
           </div>
           <Field label="Примечание"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} /></Field>
           {formError && <Alert tone="error">{formError}</Alert>}
+        </form>
+      </Modal>
+      <Modal open={!!editing} title="Поставщик и цена" onClose={() => { if (!saving) setEditing(null); }} footer={<Button type="submit" form="material-supplier" loading={saving}>Сохранить</Button>}>
+        <form id="material-supplier" onSubmit={saveSupplier} className="space-y-3">
+          {formError && <Alert tone="error">{formError}</Alert>}
+          <Field label="Поставщик"><Input maxLength={160} value={editSupplier} onChange={e => setEditSupplier(e.target.value)} /></Field>
+          <Field label={`Цена за единицу (${editing?.currency ?? ''})`}><Input type="number" min="0" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} /></Field>
         </form>
       </Modal>
     </div>

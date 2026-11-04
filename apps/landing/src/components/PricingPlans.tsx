@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Zap, Building2, Shield, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 export default function PricingPlans() {

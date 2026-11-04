@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layers, Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Layers, Menu, X, ArrowRight } from 'lucide-react';
 import Link from '@/components/Link';
 import { Button } from '@/components/ui';
 

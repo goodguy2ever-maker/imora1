@@ -1,4 +1,4 @@
-import { Ruler, FileSpreadsheet, HardHat, Check, ArrowRight, ShieldCheck, Zap, Layers } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 
 const ECOSYSTEM_PARTS = [
   {

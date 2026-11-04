@@ -1,4 +1,4 @@
-import { Layers, ShieldCheck, Heart } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import Link from '@/components/Link';
 
 export default function LandingFooter() {

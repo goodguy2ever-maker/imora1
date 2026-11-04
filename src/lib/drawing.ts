@@ -27,7 +27,7 @@ function isLabel(value: unknown): value is DrawingLabel {
 function isMarker(value: unknown): value is EstimateMarker {
   if (!value || typeof value !== 'object') return false;
   const m = value as EstimateMarker;
-  return isFiniteNumber(m.x) && isFiniteNumber(m.y) && typeof m.title === 'string' && typeof m.id === 'string';
+  return isFiniteNumber(m.x) && isFiniteNumber(m.y) && typeof m.title === 'string' && typeof m.id === 'string' && isFiniteNumber(m.quantity) && m.quantity >= 0 && isFiniteNumber(m.unit_price) && m.unit_price >= 0;
 }
 
 export function parseDrawingData(raw: unknown): DrawingData {
@@ -35,7 +35,7 @@ export function parseDrawingData(raw: unknown): DrawingData {
   return {
     walls: Array.isArray(obj.walls) ? obj.walls.filter(isWall) : [],
     labels: Array.isArray(obj.labels) ? obj.labels.filter(isLabel) : [],
-    markers: Array.isArray(obj.markers) ? obj.markers.filter(isMarker) : [],
+    markers: Array.isArray(obj.markers) ? obj.markers.filter(isMarker).map(m => ({ ...m, total_price: Math.round(m.quantity * m.unit_price * 100) / 100 })) : [],
   };
 }
 

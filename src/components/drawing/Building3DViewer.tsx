@@ -1,24 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  RotateCcw,
-  Sun,
-  Layers,
-  MapPin,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Minimize2,
-  Box,
-  Compass,
-  DollarSign
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RotateCcw, Sun, Layers, MapPin, ZoomIn, ZoomOut, Maximize2, Minimize2, Box } from 'lucide-react';
 import { CELL_M, CELL_PX, DRAWING_WIDTH, DRAWING_HEIGHT } from '@/lib/drawing';
 import { formatMoney } from '@/lib/format';
-import type { DrawingData, EstimateMarker, Wall } from '@/lib/types';
+import type { DrawingData, EstimateMarker } from '@/lib/types';
 
 interface Building3DViewerProps {
   data: DrawingData;
   drawingName: string;
+  currency: string;
   projectName?: string;
   onMarkerClick?: (marker: EstimateMarker) => void;
 }
@@ -26,6 +15,7 @@ interface Building3DViewerProps {
 export default function Building3DViewer({
   data,
   drawingName,
+  currency,
   projectName,
   onMarkerClick,
 }: Building3DViewerProps) {
@@ -56,8 +46,8 @@ export default function Building3DViewer({
     panY: 0,
   });
 
-  const markers = data.markers ?? [];
-  const walls = data.walls ?? [];
+  const markers = useMemo(() => data.markers ?? [], [data.markers]);
+  const walls = useMemo(() => data.walls ?? [], [data.walls]);
 
   // Reset Camera
   function resetCamera() {
@@ -70,7 +60,7 @@ export default function Building3DViewer({
 
   // 3D Projection math
   // World space: X = width, Y = depth, Z = height (upwards)
-  function project(x: number, y: number, z: number, width: number, height: number) {
+  const project = useCallback((x: number, y: number, z: number, width: number, height: number) => {
     // Center at midpoint of drawing
     const cx = DRAWING_WIDTH / 2;
     const cy = DRAWING_HEIGHT / 2;
@@ -96,7 +86,7 @@ export default function Building3DViewer({
       y: height / 2 + py,
       depth: ry * Math.sin(radX) + dz * Math.cos(radX), // For Z-sorting
     };
-  }
+  }, [zoom, rotationZ, rotationX, panX, panY]);
 
   // Render loop
   useEffect(() => {
@@ -105,7 +95,6 @@ export default function Building3DViewer({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
 
     function render() {
       if (!canvas || !ctx) return;
@@ -305,7 +294,7 @@ export default function Building3DViewer({
           ctx.fillText(String(idx + 1), pinPt.x, pinPt.y);
 
           // Floating Price Tag
-          const label = `${m.title} · ${formatMoney(m.total_price)}`;
+          const label = `${m.title} · ${formatMoney(m.total_price, currency)}`;
           ctx.font = '600 10.5px sans-serif';
           const textMetrics = ctx.measureText(label);
           const tagW = textMetrics.width + 16;
@@ -352,7 +341,7 @@ export default function Building3DViewer({
     }
 
     render();
-  }, [rotationX, rotationZ, zoom, panX, panY, wallHeightM, showMarkers, lightingMode, walls, markers, selectedMarker]);
+  }, [project, currency, rotationX, rotationZ, zoom, panX, panY, wallHeightM, showMarkers, lightingMode, walls, markers, selectedMarker]);
 
   // Mouse Handlers for 3D Orbit & Pan
   function handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -418,7 +407,7 @@ export default function Building3DViewer({
       <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none flex-wrap gap-2">
         <div className="flex items-center gap-2 pointer-events-auto bg-slate-900/85 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-lg shadow-xl">
           <Box className="h-4 w-4 text-sky-400" />
-          <span className="text-xs font-semibold text-white">{drawingName}</span>
+          <span className="text-xs font-semibold text-white">{projectName ? `${projectName} · ` : ''}{drawingName}</span>
           <span className="text-xs text-slate-400">· 3D Объемная модель</span>
         </div>
 
@@ -495,6 +484,7 @@ export default function Building3DViewer({
         </div>
       </div>
 
+      {markers.length > 0 && <div className="absolute left-3 top-16 max-w-xs"><label className="text-xs text-slate-300">Сметный маркер<select className="block w-full rounded bg-slate-900 p-2" value={selectedMarker?.id ?? ''} onChange={e => { const marker = markers.find(m => m.id === e.target.value) ?? null; setSelectedMarker(marker); if (marker) onMarkerClick?.(marker); }}><option value="">Не выбран</option>{markers.map(m => <option key={m.id} value={m.id}>{m.title} · {formatMoney(m.total_price, currency)}</option>)}</select></label></div>}
       {/* Bottom Floating Stats Pill */}
       <div className="absolute bottom-3 right-3 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-700/80 px-4 py-2 rounded-xl shadow-xl flex items-center gap-4 text-xs">
         <div>
@@ -509,7 +499,7 @@ export default function Building3DViewer({
         <div className="h-6 w-px bg-slate-700" />
         <div>
           <span className="text-slate-400 block text-[10px]">Стоимость по смете:</span>
-          <span className="font-bold text-emerald-400">{formatMoney(totalSum)}</span>
+          <span className="font-bold text-emerald-400">{formatMoney(totalSum, currency)}</span>
         </div>
       </div>
 

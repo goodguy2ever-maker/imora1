@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProjects } from '@/lib/hooks';
@@ -23,7 +23,7 @@ export default function ExpensesPage() {
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('RUB');
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     let query = supabase.from('expenses')
       .select('id,project_id,expense_date,category,description,amount,currency,created_by')
@@ -33,9 +33,9 @@ export default function ExpensesPage() {
     if (qErr) setError(errorMessage(qErr));
     else { setItems((data as Expense[]) ?? []); setError(''); }
     setLoading(false);
-  }
+  }, [filterProject]);
 
-  useEffect(() => { void load(); }, [filterProject]);
+  useEffect(() => { void load(); }, [load]);
 
   async function create(event: FormEvent) {
     event.preventDefault();

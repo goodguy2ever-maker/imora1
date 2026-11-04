@@ -3,7 +3,7 @@ export function formatMoney(amount: number | string | null | undefined, currency
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 

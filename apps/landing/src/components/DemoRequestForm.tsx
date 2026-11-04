@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Send, CheckCircle2, Building, User, Phone, Mail, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { Send, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Alert, Button, Field, Input, Textarea } from '@/components/ui';
 import { errorMessage } from '@/lib/format';
@@ -110,7 +110,7 @@ export default function DemoRequestForm() {
                 </div>
               ) : (
                 <form onSubmit={submit} className="space-y-4">
-                  {error && <Alert tone="rose">{error}</Alert>}
+                  {error && <Alert tone="error">{error}</Alert>}
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Ваше имя *">

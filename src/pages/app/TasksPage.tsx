@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useAuth } from '@/context/useAuth';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useProjects, useTeam } from '@/lib/hooks';
@@ -12,6 +13,8 @@ function statusTone(s: string) {
 }
 
 export default function TasksPage() {
+  const { access, session } = useAuth();
+  const canAssign = access?.role === 'COMPANY_ADMIN' || access?.role === 'ENGINEER';
   const { projects, loading: projLoading } = useProjects();
   const { team, loading: teamLoading } = useTeam();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -29,7 +32,7 @@ export default function TasksPage() {
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('normal');
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     let query = supabase.from('tasks').select('id,project_id,title,description,assignee_id,due_date,priority,status').order('created_at', { ascending: false });
     if (filterProject !== 'all') query = query.eq('project_id', filterProject);
@@ -38,9 +41,9 @@ export default function TasksPage() {
     if (queryError) setError(errorMessage(queryError));
     else { setTasks((data as Task[]) ?? []); setError(''); }
     setLoading(false);
-  }
+  }, [filterProject, filterStatus]);
 
-  useEffect(() => { void load(); }, [filterProject, filterStatus]);
+  useEffect(() => { void load(); }, [load]);
 
   async function create(event: FormEvent) {
     event.preventDefault();
@@ -139,7 +142,7 @@ export default function TasksPage() {
             <Field label="Ответственный">
               <Select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
                 <option value="">Не назначен</option>
-                {team.map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
+                {team.filter(m => m.status === 'active' && (canAssign || m.id === session?.user.id)).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
               </Select>
             </Field>
             <Field label="Приоритет">

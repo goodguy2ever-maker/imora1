@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowLeft, Eraser, Ruler, Save, Type, Undo2, MapPin, Plus, Trash2, ExternalLink, Box, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Eraser, Ruler, Save, Type, Undo2, MapPin, Trash2, Box, type LucideIcon } from 'lucide-react';
 import Building3DViewer from '@/components/drawing/Building3DViewer';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/useAuth';
@@ -62,6 +62,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
 
   const [drawing, setDrawing] = useState<Drawing | null>(null);
   const [projectName, setProjectName] = useState('');
+  const [projectCurrency, setProjectCurrency] = useState('RUB');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [data, setData] = useState<DrawingData>({ walls: [], labels: [], markers: [] });
@@ -112,9 +113,11 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
       const loaded = row as Drawing;
       setDrawing(loaded);
       setData(parseDrawingData(loaded.data));
-      const { data: project } = await supabase.from('projects').select('name').eq('id', loaded.project_id).maybeSingle();
+      const { data: project, error: projectError } = await supabase.from('projects').select('name,currency').eq('id', loaded.project_id).maybeSingle();
       if (!active) return;
-      setProjectName((project as { name: string } | null)?.name ?? '');
+      if (projectError || !project) { setLoadError('Не удалось загрузить валюту проекта. Обновите страницу.'); setLoading(false); return; }
+      setProjectName(project.name);
+      setProjectCurrency(project.currency);
       setLoading(false);
     })();
     return () => { active = false; };
@@ -360,6 +363,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
           data={data}
           drawingName={drawing.name}
           projectName={projectName}
+          currency={projectCurrency}
           onMarkerClick={openEditMarker}
         />
       ) : (
@@ -487,7 +491,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                       strokeWidth={1}
                     />
                     <text x={6} y={14} fill="#e2e8f0" fontSize={9.5} fontWeight={600}>
-                      {shortenTitle(m.title, 14)} · {formatMoney(m.total_price)}
+                      {shortenTitle(m.title, 14)} · {formatMoney(m.total_price, projectCurrency)}
                     </text>
                   </g>
                 </g>
@@ -546,7 +550,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
 
             <div className="mt-3 p-3 rounded-lg bg-amber-950/30 border border-amber-500/20">
               <span className="text-xs text-amber-300/80 block">Итого по чертежу:</span>
-              <span className="text-xl font-bold text-amber-300">{formatMoney(totalEstimateOnDrawing)}</span>
+              <span className="text-xl font-bold text-amber-300">{formatMoney(totalEstimateOnDrawing, projectCurrency)}</span>
             </div>
 
             {/* Markers list */}
@@ -574,12 +578,12 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                         {m.title}
                       </span>
                       <span className="font-bold text-amber-300 shrink-0">
-                        {formatMoney(m.total_price)}
+                        {formatMoney(m.total_price, projectCurrency)}
                       </span>
                     </div>
                     {m.room_name && <p className="text-[11px] text-slate-400 mt-1">Зона: {m.room_name}</p>}
                     <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
-                      <span>{m.quantity} {m.unit} × {formatMoney(m.unit_price)}</span>
+                      <span>{m.quantity} {m.unit} × {formatMoney(m.unit_price, projectCurrency)}</span>
                       {canEdit && (
                         <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
@@ -741,7 +745,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
           <div className="rounded-lg bg-amber-950/30 border border-amber-500/20 p-3 flex justify-between items-center text-sm">
             <span className="text-amber-200">Итого по позиции:</span>
             <span className="text-base font-bold text-amber-300">
-              {formatMoney((parseFloat(markerQty) || 0) * (parseFloat(markerUnitPrice) || 0))}
+              {formatMoney((parseFloat(markerQty) || 0) * (parseFloat(markerUnitPrice) || 0), projectCurrency)}
             </span>
           </div>
         </form>

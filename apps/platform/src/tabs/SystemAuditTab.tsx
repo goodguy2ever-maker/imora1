@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, ShieldCheck, Search, Filter } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Alert, Card, EmptyState, Spinner, Table, Td } from '@/components/ui';
 import { errorMessage } from '@/lib/format';

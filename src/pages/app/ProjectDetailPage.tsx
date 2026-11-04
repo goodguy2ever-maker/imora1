@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { canEditEstimates } from '@/lib/types';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, Plus, CheckCircle2, Copy, Pencil, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/useAuth';
@@ -36,13 +37,15 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const [acting, setActing] = useState(false);
 
   const isAdmin = access?.role === 'COMPANY_ADMIN';
+  const canEstimate = !!access?.role && canEditEstimates(access.role);
 
   useEffect(() => {
     const p = projects.find((x) => x.id === projectId) ?? null;
     setProject(p);
   }, [projects, projectId]);
 
-  async function loadVersions() {
+  const loadVersions = useCallback(async () => {
+    if (!canEstimate) { setVersions([]); setLoadingVersions(false); return; }
     setLoadingVersions(true);
     const { data, error } = await supabase
       .from('estimate_versions')
@@ -52,14 +55,14 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     if (!error && data) {
       const list = data as EstimateVersion[];
       setVersions(list);
-      if (list.length > 0 && !activeVersionId) setActiveVersionId(list[0].id);
+      setActiveVersionId(current => list.some(v => v.id === current) ? current : list[0]?.id ?? null);
     }
     setLoadingVersions(false);
-  }
+  }, [canEstimate, projectId]);
 
   useEffect(() => {
     void loadVersions();
-  }, [projectId]);
+  }, [loadVersions]);
 
   async function loadLines(versionId: string) {
     setLoadingLines(true);
@@ -240,7 +243,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         </dl>
       </Card>
 
-      <Card>
+      {canEstimate && <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/60 px-5 py-4">
           <div className="flex items-center gap-3">
             <h2 className="font-semibold text-white">Сметы</h2>
@@ -254,7 +257,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               </Select>
             )}
           </div>
-          {isAdmin && (
+          {canEstimate && (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => void createVersion(activeVersionId ?? undefined)} loading={acting}>
                 <Copy className="h-4 w-4" /> Копировать версию
@@ -271,7 +274,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         {loadingVersions ? (
           <Spinner />
         ) : !activeVersion ? (
-          <EmptyState title="Версий смет пока нет" description={isAdmin ? 'Создайте первую версию сметы.' : 'Администратор создаст сметы.'} />
+          <EmptyState title="Версий смет пока нет" description={canEstimate ? 'Создайте первую версию сметы.' : 'Администратор создаст сметы.'} />
         ) : (
           <div>
             <div className="flex items-center justify-between px-5 py-3">
@@ -281,12 +284,12 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 </Badge>
                 {activeVersion.approved_at && <span className="text-xs text-slate-400">{formatDate(activeVersion.approved_at)}</span>}
               </div>
-              {isAdmin && isDraft && (
+              {canEstimate && isDraft && (
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => { setLineDrafts([emptyLine(nextPosition)]); setLineModal(true); }}>
                     <Plus className="h-4 w-4" /> Добавить строку
                   </Button>
-                  <Button onClick={() => void approveVersion()} loading={acting}>
+                  <Button disabled={!isAdmin} onClick={() => void approveVersion()} loading={acting}>
                     <CheckCircle2 className="h-4 w-4" /> Утвердить
                   </Button>
                 </div>
@@ -296,7 +299,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             {loadingLines ? (
               <Spinner />
             ) : lines.length === 0 ? (
-              <EmptyState title="Строк нет" description={isDraft && isAdmin ? 'Добавьте позиции в смету.' : 'В этой версии нет позиций.'} />
+              <EmptyState title="Строк нет" description={isDraft && canEstimate ? 'Добавьте позиции в смету.' : 'В этой версии нет позиций.'} />
             ) : (
               <>
                 <Table head={['№', 'Наименование', 'Ед.', 'Кол-во', 'Цена', 'Сумма', '']}>
@@ -309,7 +312,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                       <Td>{formatMoney(l.unit_price, project.currency)}</Td>
                       <Td className="font-semibold">{formatMoney(l.line_total, project.currency)}</Td>
                       <Td>
-                        {isAdmin && isDraft && (
+                        {canEstimate && isDraft && (
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => { setLineDrafts([{ id: l.id, position: l.position, name: l.name, unit: l.unit, quantity: String(l.quantity), unit_price: String(l.unit_price) }]); setLineModal(true); }}
@@ -334,10 +337,10 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             )}
           </div>
         )}
-      </Card>
+      </Card>}
 
       <div className="mt-6">
-        <ProjectDrawings projectId={projectId} isAdmin={isAdmin} />
+        {canEstimate && <ProjectDrawings projectId={projectId} isAdmin={canEstimate} />}
       </div>
 
       <Modal open={lineModal} title="Строки сметы" onClose={() => setLineModal(false)}

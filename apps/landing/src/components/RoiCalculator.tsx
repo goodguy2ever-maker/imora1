@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calculator, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Calculator, TrendingUp, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 export default function RoiCalculator() {
