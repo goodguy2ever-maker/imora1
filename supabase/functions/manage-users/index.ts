@@ -127,6 +127,10 @@ function mapAuthError(message: string): string {
 }
 
 async function createCompany(service: SupabaseClient, callerId: string, body: Record<string, unknown>) {
+  const requestId = body.demo_request_id == null ? null : text(body.demo_request_id, "Заявка", 36, 36);
+  if (requestId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)) {
+    throw new ActionError("Некорректный идентификатор заявки");
+  }
   const name = text(body.name, "Название компании", 2, 160);
   const status = String(body.status ?? "");
   if (!COMPANY_STATUSES.includes(status)) throw new ActionError("Неизвестный статус компании");
@@ -150,7 +154,8 @@ async function createCompany(service: SupabaseClient, callerId: string, body: Re
   }
   const newUserId = created.user.id;
 
-  const { data: companyId, error: rpcErr } = await service.rpc("create_company_with_admin", {
+  const { data: companyId, error: rpcErr } = await service.rpc(requestId ? "create_company_from_demo_request" : "create_company_with_admin", {
+    ...(requestId ? { p_request_id: requestId } : {}),
     p_actor: callerId,
     p_name: name,
     p_city: city,

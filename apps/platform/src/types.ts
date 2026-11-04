@@ -1,4 +1,4 @@
-export type DemoRequestStatus = 'new' | 'contacted' | 'negotiation' | 'approved' | 'rejected';
+export type DemoRequestStatus = 'new' | 'contacted' | 'negotiation' | 'approved' | 'rejected' | 'closed';
 
 export type DemoRequest = {
   id: string;
@@ -8,6 +8,7 @@ export type DemoRequest = {
   contact: string;
   message: string | null;
   status: DemoRequestStatus;
+  company_id: string | null;
   created_at: string;
   notes?: string;
   assigned_plan?: string;

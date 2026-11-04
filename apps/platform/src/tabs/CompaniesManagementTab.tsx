@@ -69,7 +69,7 @@ export default function CompaniesManagementTab() {
     try {
       await callManageUsers<{ company_id: string }>({
         action: 'create_company',
-        company_name: cName.trim(),
+        name: cName.trim(),
         city: cCity.trim() || null,
         contact_email: cEmail.trim() || null,
         contact_phone: cPhone.trim() || null,
@@ -78,7 +78,7 @@ export default function CompaniesManagementTab() {
         user_limit: parseInt(cLimit, 10),
         admin_email: aEmail.trim(),
         admin_password: aPassword,
-        admin_full_name: aName.trim(),
+        admin_name: aName.trim(),
         admin_position: aPosition.trim() || null,
       });
       setCreateOpen(false);

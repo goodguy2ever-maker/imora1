@@ -1,2 +1,11 @@
+project_id = "imora"
+
+[auth]
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = false
+
 [functions.manage-users]
 verify_jwt = true

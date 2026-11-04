@@ -1,26 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
   Users,
-  Building,
   Mail,
   Phone,
-  MessageSquare,
   CheckCircle2,
-  XCircle,
-  Clock,
-  Sparkles,
   Key,
   Copy,
   Check,
-  Send,
-  ExternalLink,
-  ShieldAlert,
-  Search,
-  Filter
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { callManageUsers } from '@/lib/manageUsers';
-import { Alert, Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Spinner, Table, Td } from '@/components/ui';
+import { Alert, Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Spinner } from '@/components/ui';
 import { formatDate, errorMessage } from '@/lib/format';
 import { sendDirectorAccessEmail } from '@/lib/emailService';
 import type { DemoRequest, DemoRequestStatus } from '../types';
@@ -51,6 +41,7 @@ export default function RequestsPipelineTab() {
     tempPass: string;
     loginUrl: string;
     plan: string;
+    warning?: string;
     emailSent?: boolean;
     mailtoUrl?: string;
   } | null>(null);
@@ -77,19 +68,24 @@ export default function RequestsPipelineTab() {
   }, []);
 
   async function updateStatus(id: string, newStatus: DemoRequestStatus) {
-    const { error: updErr } = await supabase
-      .from('demo_requests')
-      .update({ status: newStatus })
-      .eq('id', id);
-
-    if (!updErr) {
-      setRequests((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-      );
+    setError('');
+    try {
+      const { data, error: updErr } = await supabase
+        .from('demo_requests')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .select('id,status')
+        .single();
+      if (updErr) throw updErr;
+      if (!data) throw new Error('Заявка не найдена или доступ запрещён');
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: data.status as DemoRequestStatus } : r));
+    } catch (err) {
+      setError(errorMessage(err));
     }
   }
 
   function openActivationModal(req: DemoRequest) {
+    if (req.company_id || req.status === 'approved') return;
     setActiveRequest(req);
     setCompanyName(req.company_name);
     setAdminName(req.full_name);
@@ -98,9 +94,8 @@ export default function RequestsPipelineTab() {
     const isEmail = req.contact.includes('@');
     setAdminEmail(isEmail ? req.contact.trim() : '');
 
-    // Generate strong temporary password
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    setAdminPassword(`Imora#${randomSuffix}`);
+    const random = crypto.getRandomValues(new Uint8Array(16));
+    setAdminPassword(`Imora#${Array.from(random, b => b.toString(16).padStart(2, '0')).join('')}`);
 
     setSelectedPlan('business');
     setUserLimit('10');
@@ -109,7 +104,7 @@ export default function RequestsPipelineTab() {
   }
 
   async function handleActivateCompany() {
-    if (!activeRequest) return;
+    if (!activeRequest || activating || activeRequest.company_id) return;
     setActivating(true);
     setActivationError('');
 
@@ -121,9 +116,10 @@ export default function RequestsPipelineTab() {
       const accessUntilIso = untilDate.toISOString().slice(0, 10);
 
       // Create company and admin through the authenticated edge function.
-      await callManageUsers<{ company_id: string }>({
+      const result = await callManageUsers<{ company_id: string }>({
         action: 'create_company',
-        company_name: companyName.trim(),
+        demo_request_id: activeRequest.id,
+        name: companyName.trim(),
         city: 'Город не указан',
         contact_email: adminEmail.trim(),
         contact_phone: !activeRequest.contact.includes('@') ? activeRequest.contact : null,
@@ -132,39 +128,34 @@ export default function RequestsPipelineTab() {
         user_limit: parseInt(userLimit, 10) || 10,
         admin_email: adminEmail.trim(),
         admin_password: adminPassword.trim(),
-        admin_full_name: adminName.trim(),
+        admin_name: adminName.trim(),
         admin_position: activeRequest.position || 'Руководитель',
       });
 
-      // Mark request as approved in database
-      await updateStatus(activeRequest.id, 'approved');
-
-      // Send access email to the director
+      // The RPC has already linked and approved the request atomically.
+      setRequests(prev => prev.map(r => r.id === activeRequest.id
+        ? { ...r, status: 'approved', company_id: result.company_id } : r));
       const loginUrl = `${window.location.origin}/login`;
-      const emailResult = await sendDirectorAccessEmail({
-        to: adminEmail.trim(),
-        directorName: adminName.trim(),
-        companyName: companyName.trim(),
-        loginUrl,
-        tempPassword: adminPassword.trim(),
+      const card = {
+        companyName: companyName.trim(), login: adminEmail.trim(), tempPass: adminPassword.trim(), loginUrl,
         plan: selectedPlan === 'starter' ? 'Старт (до 5 польз.)' : selectedPlan === 'business' ? 'Бизнес (до 25 польз.)' : 'Корпорация',
-        accessUntil: accessUntilIso,
-      });
-
-      // Present the credential card for the superadmin
-      setCredentialCard({
-        companyName: companyName.trim(),
-        login: adminEmail.trim(),
-        tempPass: adminPassword.trim(),
-        loginUrl,
-        plan: selectedPlan === 'starter' ? 'Старт (до 5 польз.)' : selectedPlan === 'business' ? 'Бизнес (до 25 польз.)' : 'Корпорация',
-        emailSent: emailResult.success,
-        mailtoUrl: emailResult.mailtoUrl,
-      });
-
+        emailSent: false,
+      };
+      // Preserve credentials and close the creation form before optional email work.
+      setCredentialCard(card);
       setActiveRequest(null);
+      try {
+        const emailResult = await sendDirectorAccessEmail({
+          to: card.login, directorName: adminName.trim(), companyName: card.companyName,
+          loginUrl, tempPassword: card.tempPass, plan: card.plan, accessUntil: accessUntilIso,
+        });
+        setCredentialCard({ ...card, emailSent: emailResult.success && emailResult.mode === 'api', mailtoUrl: emailResult.mailtoUrl });
+      } catch {
+        setCredentialCard({ ...card, warning: 'Компания создана. Письмо отправить не удалось — передайте реквизиты клиенту вручную.' });
+      }
+
     } catch (err) {
-      setActivationError(errorMessage(err));
+      setActivationError(`${errorMessage(err)}. Если соединение прервалось, обновите список компаний и заявок перед повторной попыткой.`);
     } finally {
       setActivating(false);
     }
@@ -243,6 +234,7 @@ export default function RequestsPipelineTab() {
             </button>
           </div>
 
+          {credentialCard.warning && <Alert tone="info">{credentialCard.warning}</Alert>}
           <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950 p-4 font-mono text-xs text-slate-200 space-y-1.5">
             <div><span className="text-slate-400">Ссылка для входа:</span> <strong className="text-sky-400">{credentialCard.loginUrl}</strong></div>
             <div><span className="text-slate-400">Логин администратора:</span> <strong className="text-white">{credentialCard.login}</strong></div>
@@ -269,8 +261,8 @@ export default function RequestsPipelineTab() {
             <Button variant="secondary" onClick={() => setCredentialCard(null)}>
               Готово
             </Button>
-            <span className="text-xs text-emerald-300 flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Уведомление с реквизитами отправлено директору
+            <span className="text-xs text-slate-300">
+              {credentialCard.emailSent ? 'Письмо с реквизитами отправлено директору' : 'Письмо автоматически не отправлено. Передайте реквизиты клиенту.'}
             </span>
           </div>
         </div>
@@ -290,6 +282,7 @@ export default function RequestsPipelineTab() {
             <option value="negotiation">Переговоры по тарифу</option>
             <option value="approved">Доступ открыт (Активированы)</option>
             <option value="rejected">Отклонены</option>
+            <option value="closed">Закрытые (архив)</option>
           </Select>
         </div>
 
@@ -313,7 +306,7 @@ export default function RequestsPipelineTab() {
       ) : (
         <div className="space-y-4">
           {filtered.map((r) => {
-            const isApproved = r.status === 'approved';
+            const isApproved = r.status === 'approved' || !!r.company_id;
 
             return (
               <Card key={r.id} className="p-5 border-slate-800 bg-slate-900/60 hover:border-slate-700 transition">
@@ -340,7 +333,7 @@ export default function RequestsPipelineTab() {
                           ? 'Переговоры'
                           : r.status === 'approved'
                           ? 'Доступ открыт'
-                          : 'Отклонена'}
+                          : r.status === 'closed' ? 'Закрыта' : 'Отклонена'}
                       </Badge>
                     </div>
 
@@ -370,17 +363,19 @@ export default function RequestsPipelineTab() {
                   <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
                     <Select
                       value={r.status}
+                      disabled={isApproved}
                       onChange={(e) => void updateStatus(r.id, e.target.value as DemoRequestStatus)}
                       className="w-36 py-1 text-xs"
                     >
                       <option value="new">Новая</option>
                       <option value="contacted">Связались</option>
                       <option value="negotiation">Переговоры</option>
-                      <option value="approved">Доступ открыт</option>
+                      <option value="approved" disabled>Доступ открыт</option>
                       <option value="rejected">Отклонена</option>
+                      <option value="closed">Закрыта</option>
                     </Select>
 
-                    {!isApproved && (
+                    {!isApproved && r.status !== 'closed' && r.status !== 'rejected' && (
                       <Button
                         variant="primary"
                         onClick={() => openActivationModal(r)}
@@ -401,10 +396,10 @@ export default function RequestsPipelineTab() {
       <Modal
         open={!!activeRequest}
         title="Активация доступа и создание компании"
-        onClose={() => setActiveRequest(null)}
+        onClose={() => { if (!activating) setActiveRequest(null); }}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setActiveRequest(null)}>
+            <Button variant="secondary" disabled={activating} onClick={() => setActiveRequest(null)}>
               Отмена
             </Button>
             <Button
@@ -436,7 +431,7 @@ export default function RequestsPipelineTab() {
             <Field label="Тарифный план">
               <Select
                 value={selectedPlan}
-                onChange={(e) => setSelectedPlan(e.target.value as any)}
+                onChange={(e) => setSelectedPlan(e.target.value as 'starter' | 'business' | 'enterprise')}
               >
                 <option value="starter">Старт (до 5 польз., 14 900 ₽/мес)</option>
                 <option value="business">Бизнес (до 25 польз., 39 900 ₽/мес)</option>
@@ -446,14 +441,13 @@ export default function RequestsPipelineTab() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Срок доступа (дней)">
+            <Field label="Срок доступа (дней)" hint="14 дней для триала, 30 или 365 для оплаченных">
               <Input
                 type="number"
                 min="1"
                 max="365"
                 value={accessDays}
                 onChange={(e) => setAccessDays(e.target.value)}
-                hint="14 дней для триала, 30 или 365 для оплаченных"
               />
             </Field>
 
