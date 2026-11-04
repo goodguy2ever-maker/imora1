@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Access } from '@/lib/types';
@@ -15,54 +15,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [access, setAccess] = useState<Access | null>(null);
   const [accessError, setAccessError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const currentSession = useRef<Session | null>(null);
+  const revision = useRef(0);
+  const mounted = useRef(false);
 
   const loadAccess = useCallback(async () => {
+    if (!mounted.current || !currentSession.current) return null;
+    const request = ++revision.current;
+    setAccess(null);
+    setAccessError(false);
+    setLoading(true);
     try {
       const next = await fetchAccess();
+      if (!mounted.current || request !== revision.current) return null;
       setAccess(next);
-      setAccessError(false);
       return next;
     } catch {
-      setAccess(null);
-      setAccessError(true);
+      if (mounted.current && request === revision.current) {
+        setAccess(null);
+        setAccessError(true);
+      }
       return null;
+    } finally {
+      if (mounted.current && request === revision.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     let active = true;
+    let receivedAuthEvent = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    mounted.current = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      (async () => {
-        if (!active) return;
-        setSession(data.session);
-        if (data.session) await loadAccess();
-        if (active) setLoading(false);
-      })();
-    });
+    function invalidateAccess() { revision.current++; }
+
+    function applySession(next: Session | null) {
+      if (!active) return;
+      // Invalidate outstanding rights immediately, including on user switches.
+      invalidateAccess();
+      currentSession.current = next;
+      setSession(next);
+      setAccess(null);
+      setAccessError(false);
+      setLoading(!!next);
+      if (timer !== undefined) clearTimeout(timer);
+      // Never make a Supabase request while its Auth event lock is held.
+      if (next) timer = setTimeout(() => { void loadAccess(); }, 0);
+    }
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, next) => {
-      (async () => {
-        setSession(next);
-        if (next) {
-          await loadAccess();
-        } else {
-          setAccess(null);
-          setAccessError(false);
-        }
-      })();
+      receivedAuthEvent = true;
+      applySession(next);
+    });
+
+    // An Auth event always wins over an older initial-session response.
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active || receivedAuthEvent) return;
+      if (error) throw error;
+      applySession(data.session);
+    }).catch(() => {
+      if (!active || receivedAuthEvent) return;
+      applySession(null);
+      setAccessError(true);
     });
 
     return () => {
       active = false;
+      mounted.current = false;
+      invalidateAccess();
+      if (timer !== undefined) clearTimeout(timer);
       subscription.subscription.unsubscribe();
     };
   }, [loadAccess]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    revision.current++;
+    currentSession.current = null;
+    setSession(null);
     setAccess(null);
     setAccessError(false);
+    setLoading(false);
   }, []);
 
   const value = useMemo<AuthValue>(
