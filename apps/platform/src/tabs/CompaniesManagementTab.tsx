@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Building2, Plus, Calendar, ShieldCheck, AlertTriangle, Users, Search, RefreshCw, Key } from 'lucide-react';
+import { Building2, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { callManageUsers } from '@/lib/manageUsers';
-import { Alert, Badge, Button, Card, EmptyState, Field, Input, Modal, PageHeader, Select, Spinner, Table, Td } from '@/components/ui';
+import { Alert, Badge, Button, Card, EmptyState, Field, Input, Modal, Select, Spinner, Table, Td } from '@/components/ui';
 import { COMPANY_STATUS_LABELS } from '@/lib/labels';
 import { formatDate, errorMessage } from '@/lib/format';
 import type { PlatformCompany } from '../types';
@@ -20,7 +20,6 @@ export default function CompaniesManagementTab() {
 
   // Modals state
   const [createOpen, setCreateOpen] = useState(false);
-  const [editCompany, setEditCompany] = useState<PlatformCompany | null>(null);
   const [accessCompany, setAccessCompany] = useState<PlatformCompany | null>(null);
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -31,15 +30,15 @@ export default function CompaniesManagementTab() {
   // Create form state
   const [cName, setCName] = useState('');
   const [cCity, setCCity] = useState('');
-  const [cEmail, setCEmail] = useState('');
-  const [cPhone, setCPhone] = useState('');
+  const [cEmail] = useState('');
+  const [cPhone] = useState('');
   const [cStatus, setCStatus] = useState<'trial' | 'active' | 'suspended'>('trial');
   const [cAccessUntil, setCAccessUntil] = useState('');
   const [cLimit, setCLimit] = useState('10');
   const [aEmail, setAEmail] = useState('');
   const [aPassword, setAPassword] = useState('');
   const [aName, setAName] = useState('');
-  const [aPosition, setAPosition] = useState('');
+  const [aPosition] = useState('');
 
   // Access modal state
   const [aStatus, setAStatus] = useState<string>('trial');
@@ -103,49 +102,62 @@ export default function CompaniesManagementTab() {
     if (!accessCompany) return;
     setFormError('');
     setSaving(true);
-    const { error: rpcErr } = await supabase.rpc('platform_set_company_access', {
-      p_company_id: accessCompany.id,
-      p_status: aStatus,
-      p_access_until: aAccessUntil,
-      p_user_limit: parseInt(aLimit, 10),
-    });
-    setSaving(false);
-    if (rpcErr) {
-      setFormError(errorMessage(rpcErr));
-      return;
+    try {
+      const { error: rpcErr } = await supabase.rpc('platform_set_access', {
+        p_company_id: accessCompany.id,
+        p_status: aStatus,
+        p_access_until: aAccessUntil,
+        p_user_limit: parseInt(aLimit, 10),
+      });
+      if (rpcErr) throw rpcErr;
+      setAccessCompany(null);
+      await load();
+    } catch (err) {
+      setFormError(errorMessage(err));
+    } finally {
+      setSaving(false);
     }
-    setAccessCompany(null);
-    void load();
   }
 
   async function quickExtendDays(company: PlatformCompany, addDays: number) {
     setQuickActingId(company.id);
-    const current = company.access_until ? new Date(company.access_until) : new Date();
-    const target = current > new Date() ? current : new Date();
-    target.setDate(target.getDate() + addDays);
-    const targetIso = target.toISOString().slice(0, 10);
-
-    await supabase.rpc('platform_set_company_access', {
-      p_company_id: company.id,
-      p_status: 'active',
-      p_access_until: targetIso,
-      p_user_limit: company.user_limit,
-    });
-    setQuickActingId(null);
-    void load();
+    setError('');
+    try {
+      const current = new Date(company.access_until);
+      const target = current > new Date() ? current : new Date();
+      target.setDate(target.getDate() + addDays);
+      const { error: rpcErr } = await supabase.rpc('platform_set_access', {
+        p_company_id: company.id,
+        p_status: 'active',
+        p_access_until: target.toISOString(),
+        p_user_limit: company.user_limit,
+      });
+      if (rpcErr) throw rpcErr;
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setQuickActingId(null);
+    }
   }
 
   async function toggleSuspend(company: PlatformCompany) {
     setQuickActingId(company.id);
-    const newStatus = company.status === 'suspended' ? 'active' : 'suspended';
-    await supabase.rpc('platform_set_company_access', {
-      p_company_id: company.id,
-      p_status: newStatus,
-      p_access_until: company.access_until.slice(0, 10),
-      p_user_limit: company.user_limit,
-    });
-    setQuickActingId(null);
-    void load();
+    setError('');
+    try {
+      const { error: rpcErr } = await supabase.rpc('platform_set_access', {
+        p_company_id: company.id,
+        p_status: company.status === 'suspended' ? 'active' : 'suspended',
+        p_access_until: company.access_until,
+        p_user_limit: company.user_limit,
+      });
+      if (rpcErr) throw rpcErr;
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setQuickActingId(null);
+    }
   }
 
   const filtered = companies.filter((c) => {
@@ -303,7 +315,7 @@ export default function CompaniesManagementTab() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Город"><Input value={cCity} onChange={(e) => setCCity(e.target.value)} /></Field>
             <Field label="Статус">
-              <Select value={cStatus} onChange={(e) => setCStatus(e.target.value as any)}>
+              <Select value={cStatus} onChange={(e) => setCStatus(e.target.value as 'trial' | 'active' | 'suspended')}>
                 <option value="trial">Пробный период (trial)</option>
                 <option value="active">Активна (active)</option>
                 <option value="suspended">Приостановлена (suspended)</option>

@@ -134,3 +134,47 @@ test('status update errors are visible and do not update local rows', async () =
   await handler('apps/platform/src/tabs/RequestsPipelineTab.tsx', 'updateStatus', context)('request-a', 'contacted');
   assert.deepEqual(context.events, [['error', ''], ['error', 'Denied']]);
 });
+
+function accessState(fail = false) {
+  const context = state();
+  Object.assign(context, {
+    accessCompany: { id: 'company-a' }, aStatus: 'active', aAccessUntil: '2027-01-01', aLimit: '10',
+    setAccessCompany: value => context.events.push(['accessModal', value]),
+    setError: value => context.events.push(['error', value]),
+    setQuickActingId: value => context.events.push(['quick', value]),
+    supabase: { rpc: async (name, args) => {
+      context.events.push(['rpc', name, args]);
+      return { error: fail ? new Error('Access denied') : null };
+    } },
+  });
+  return context;
+}
+test('access form uses the existing RPC and displays failures without closing', async () => {
+  const context = accessState(true);
+  await handler('apps/platform/src/tabs/CompaniesManagementTab.tsx', 'saveAccess', context)({ preventDefault() {} });
+  assert.equal(context.events.find(([e]) => e === 'rpc')[1], 'platform_set_access');
+  assert.ok(context.events.some(([e,v]) => e === 'error' && v === 'Access denied'));
+  assert.equal(context.events.some(([e]) => e === 'accessModal'), false);
+  assert.deepEqual(context.events.at(-1), ['saving', false]);
+});
+test('quick extension preserves time of day instead of truncating to midnight', async () => {
+  const context = accessState();
+  const company = { id: 'company-a', access_until: '2099-01-01T15:30:00.000Z', user_limit: 10 };
+  await handler('apps/platform/src/tabs/CompaniesManagementTab.tsx', 'quickExtendDays', context)(company, 7);
+  const call = context.events.find(([e]) => e === 'rpc');
+  assert.equal(call[1], 'platform_set_access');
+  assert.equal(call[2].p_access_until, '2099-01-08T15:30:00.000Z');
+  assert.deepEqual(context.events.at(-1), ['quick', null]);
+});
+test('suspension preserves expiration and reports RPC errors', async () => {
+  const context = accessState(true);
+  const company = { id: 'company-a', status: 'active', access_until: '2099-01-01T15:30:00.000Z', user_limit: 10 };
+  await handler('apps/platform/src/tabs/CompaniesManagementTab.tsx', 'toggleSuspend', context)(company);
+  const call = context.events.find(([e]) => e === 'rpc');
+  assert.equal(call[1], 'platform_set_access');
+  assert.equal(call[2].p_status, 'suspended');
+  assert.equal(call[2].p_access_until, company.access_until);
+  assert.ok(context.events.some(([e,v]) => e === 'error' && v === 'Access denied'));
+  assert.equal(context.events.some(([e]) => e === 'reload'), false);
+  assert.deepEqual(context.events.at(-1), ['quick', null]);
+});
