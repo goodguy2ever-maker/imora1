@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import postcss from 'postcss';
+const source=fs.readFileSync('C:/Users/Computer Store/Downloads/Telegram Desktop/imora-landing-page.html','utf8');
+fs.mkdirSync('apps/landing/versions/v2',{recursive:true});fs.writeFileSync('apps/landing/versions/v2/original.html',source);
+let css=source.match(/<style>([\s\S]*?)<\/style>/)[1];
+const root=postcss.parse(css);
+root.walkRules(rule=>{rule.selector=rule.selector.split(',').map(s=>{s=s.trim();if(s===':root'||s==='body'||s==='html')return '.landing-v2';return '.landing-v2 '+s;}).join(',');});
+fs.writeFileSync('apps/landing/src/LandingV2.css',root.toString()+`\n.landing-v2 .mobile-menu{display:none}.landing-v2 .nav-actions .login{display:inline}.landing-v2 .nav-actions{gap:12px}.landing-v2 .navlinks{flex-wrap:wrap}.landing-v2 .nav{gap:16px}.landing-v2 a:focus-visible{outline:2px solid var(--orange);outline-offset:5px}\n`);
+let body=source.match(/<body>([\s\S]*?)<\/body>/)[1];
+body=body.replace('class="login" href="#contact"','class="login" href="/login"').replaceAll('href="#contact"','href="#demo"').replace('href="mailto:hello@imora.uz"','href="#demo"').replace('Bepul boshlash','Demo so‘rash').replace('Ro‘yxatdan o‘ting','So‘rov qoldiring').replace('Kompaniyangiz profilini yarating va jamoa a’zolarini platformaga taklif qiling.','Administrator bilan ulanish shartlarini kelishing. Kompaniyangiz va jamoangizga kirish huquqi beriladi.').replace('AI TOOLS','DRAWINGS').replace('AI yordamchi','Chizmalar').replace('Hisob-kitob va tahlil jarayonlarida sun’iy intellekt imkoniyatlaridan foydalaning.','Obyekt chizmalarini tahrirlang, o‘lchamlar va materiallar hajmi bilan ishlang.');
+const footer=body.match(/<footer>[\s\S]*?<\/footer>/)[0];body=body.replace(footer,'');
+fs.writeFileSync('apps/landing/src/landing-v2-body.html',body);fs.writeFileSync('apps/landing/src/landing-v2-footer.html',footer);

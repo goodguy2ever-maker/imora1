@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IMORA — qurilish loyihalari, smeta, resurslar va hamkorlarni bitta platformada boshqaring.">
+  <title>IMORA — Qurilish sohasining raqamli ekotizimi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#101112;--panel:#191a1b;--text:#f5f3ef;--muted:#a8a7a2;--orange:#ff842e;--line:rgba(255,255,255,.12);--max:1180px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}
+    a{color:inherit;text-decoration:none}.wrap{width:min(var(--max),calc(100% - 48px));margin:auto}
+    .nav{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:10px;font:800 25px Manrope,sans-serif;letter-spacing:-1px}.brand-mark{width:31px;height:31px;display:grid;place-items:center;color:var(--orange)}
+    .brand-mark svg{width:31px;height:31px}.navlinks{display:flex;gap:34px;color:#c8c6c1;font-size:13px}.navlinks a:hover{color:white}
+    .nav-actions{display:flex;align-items:center;gap:20px;font-size:13px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 20px;border-radius:9px;font-weight:700;font-size:13px;transition:.2s;cursor:pointer}
+    .btn-primary{background:var(--orange);color:#171310;box-shadow:0 8px 28px #ff842e30}.btn-primary:hover{background:#ff9a54;transform:translateY(-2px)}
+    .btn-outline{border:1px solid #ffffff35;color:#fff}.btn-outline:hover{border-color:var(--orange)}
+    .hero{position:relative;min-height:650px;display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line)}
+    .hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#101112 0%,rgba(16,17,18,.96) 30%,rgba(16,17,18,.62) 62%,rgba(16,17,18,.35) 100%),url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2000&q=90") center/cover}
+    .hero:after{content:"";position:absolute;inset:auto 0 0;height:180px;background:linear-gradient(transparent,var(--bg))}
+    .hero-content{position:relative;z-index:1;max-width:650px;padding:92px 0 115px}
+    .eyebrow{display:inline-flex;align-items:center;gap:10px;color:#ffad76;text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:700}
+    .eyebrow:before{content:"";width:25px;height:1px;background:var(--orange)}
+    h1,h2,h3{font-family:Manrope,sans-serif}h1{font-size:clamp(43px,6vw,74px);line-height:1.04;letter-spacing:-3.5px;margin:25px 0 22px;font-weight:800}
+    h1 span{color:var(--orange)}.hero p{max-width:530px;color:#c4c1bb;font-size:17px;line-height:1.75;margin:0 0 32px}
+    .hero-buttons{display:flex;gap:13px;flex-wrap:wrap}.hero-note{display:flex;align-items:center;gap:12px;color:#aaa8a3;font-size:11px;margin-top:42px}
+    .note-line{height:1px;width:34px;background:var(--orange)}
+    .trust{padding:25px 0 34px;border-bottom:1px solid var(--line)}.trust-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+    .trust-label{font-size:11px;color:#777873;text-transform:uppercase;letter-spacing:1.6px}.trust-items{display:flex;gap:42px;align-items:center;color:#aaa9a4;font:700 15px Manrope}
+    section{padding:105px 0}.section-head{max-width:650px;margin-bottom:48px}.section-head h2{font-size:clamp(32px,4vw,48px);letter-spacing:-2px;line-height:1.12;margin:17px 0}.section-head p{color:var(--muted);line-height:1.75;font-size:15px}
+    .features{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.feature{background:linear-gradient(145deg,#202122,#171819);border:1px solid var(--line);border-radius:14px;padding:27px 23px;min-height:220px;transition:.25s}
+    .feature:hover{transform:translateY(-5px);border-color:#ff842e75}.ico{width:43px;height:43px;border:1px solid #ff842e55;background:#ff842e12;border-radius:11px;display:grid;place-items:center;color:var(--orange);font-size:20px;margin-bottom:28px}
+    .feature h3{font-size:17px;margin:0 0 10px}.feature p{font-size:13px;color:var(--muted);line-height:1.65;margin:0}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}.visual{position:relative;min-height:410px;border-radius:18px;overflow:hidden;background:linear-gradient(140deg,#292725,#111);border:1px solid var(--line)}
+    .visual img{width:100%;height:410px;object-fit:cover;opacity:.72}.visual:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,#111)}
+    .floating-card{position:absolute;z-index:1;bottom:22px;left:22px;right:22px;padding:18px 20px;background:#171819e8;border:1px solid #ffffff20;border-radius:12px;backdrop-filter:blur(12px)}
+    .floating-card small{color:var(--orange);text-transform:uppercase;letter-spacing:1.4px;font-size:9px}.floating-card strong{display:block;font:700 19px Manrope;margin-top:7px}
+    .checklist{display:grid;gap:18px;margin:30px 0}.check{display:flex;gap:13px;color:#d4d1cb;font-size:14px;line-height:1.6}.check b{color:var(--orange);font-size:17px}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{padding:28px;border-top:1px solid var(--orange);background:#191a1b;border-radius:0 0 13px 13px}.step-no{color:var(--orange);font:800 28px Manrope}.step h3{font-size:18px;margin:20px 0 10px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
+    .cta{padding:0 0 100px}.cta-box{position:relative;overflow:hidden;padding:65px 58px;border:1px solid #ff842e55;border-radius:18px;background:radial-gradient(ellipse at 90% 0%,#793b1d70,transparent 45%),linear-gradient(110deg,#24201d,#171819)}
+    .cta-box h2{font-size:clamp(30px,4vw,46px);letter-spacing:-2px;max-width:650px;margin:0 0 15px}.cta-box p{color:#bcb8b1;max-width:550px;line-height:1.7;margin:0 0 26px}
+    footer{border-top:1px solid var(--line);padding:30px 0;color:#888780;font-size:12px}.foot{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}.foot .brand{color:#eee;font-size:21px}
+    .mobile-menu{display:none}
+    @media(max-width:900px){.navlinks{gap:17px}.features{grid-template-columns:repeat(2,1fr)}.split{gap:35px}}
+    @media(max-width:650px){.wrap{width:min(100% - 32px,var(--max))}.nav{height:70px}.navlinks,.nav-actions .login{display:none}.mobile-menu{display:block;color:#eee;font-size:23px}.hero{min-height:600px}.hero-content{padding:80px 0 95px}h1{letter-spacing:-2px}.hero p{font-size:15px}.trust-items{gap:18px;flex-wrap:wrap}.trust-items span{font-size:12px}section{padding:75px 0}.features,.steps,.split{grid-template-columns:1fr}.visual{min-height:300px}.visual img{height:300px}.cta{padding-bottom:70px}.cta-box{padding:38px 25px}.feature{min-height:190px}}
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <nav class="nav">
+      <a class="brand" href="#top" aria-label="IMORA bosh sahifa">
+        <span class="brand-mark"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M4 29 18 8l7 10 5-7 7 18h-9l-4-8-5 8H4Z" fill="currentColor"/><path d="m4 34 11-16 5 7-6 9H4Z" fill="#f4f1eb"/></svg></span>imora
+      </a>
+      <div class="navlinks"><a href="#platform">Platforma</a><a href="#features">Imkoniyatlar</a><a href="#how">Qanday ishlaydi</a><a href="#about">Biz haqimizda</a></div>
+      <div class="nav-actions"><a class="login" href="#contact">Kirish</a><a class="btn btn-primary" href="#contact">Boshlash <span>↗</span></a></div>
+      <div class="mobile-menu">☰</div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-content">
+          <div class="eyebrow">Qurilishning yangi davri</div>
+          <h1>Qurilish sohasining <span>raqamli</span> ekotizimi</h1>
+          <p>Loyiha, smeta, resurslar va hamkorlarni bitta platformada boshqaring. IMORA bilan qurilish jarayonlarini aniqroq, tezroq va samaraliroq tashkil eting.</p>
+          <div class="hero-buttons"><a class="btn btn-primary" href="#contact">Bepul boshlash <span>↗</span></a><a class="btn btn-outline" href="#platform">Platformani ko‘rish <span>▷</span></a></div>
+          <div class="hero-note"><span class="note-line"></span> Qurilish biznesi uchun yagona raqamli muhit</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust"><div class="wrap trust-inner"><div class="trust-label">Bitta platformada</div><div class="trust-items"><span>PROJECTS</span><span>ESTIMATES</span><span>AI TOOLS</span><span>SUPPLIERS</span><span>ANALYTICS</span></div></div></div>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">IMORA imkoniyatlari</div><h2>Qurilish jarayonining har bir bosqichi — nazorat ostida</h2><p>Tarqoq vositalar o‘rniga yagona boshqaruv muhiti. Jamoangiz, xarajatlaringiz va loyihalaringiz bir-biri bilan bog‘langan holda ishlaydi.</p></div>
+        <div class="features">
+          <article class="feature"><div class="ico">▱</div><h3>Loyiha boshqaruvi</h3><p>Loyihalar, vazifalar, muddatlar va jamoa ishini yagona joydan kuzating.</p></article>
+          <article class="feature"><div class="ico">▤</div><h3>Aniq smeta</h3><p>Xarajatlarni rejalashtiring, smetalarni shakllantiring va byudjetni nazorat qiling.</p></article>
+          <article class="feature"><div class="ico">✧</div><h3>AI yordamchi</h3><p>Hisob-kitob va tahlil jarayonlarida sun’iy intellekt imkoniyatlaridan foydalaning.</p></article>
+          <article class="feature"><div class="ico">⌂</div><h3>Ishonchli hamkorlar</h3><p>Yetkazib beruvchilar va qurilish hamkorlari bilan samarali ishlang.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="platform">
+      <div class="wrap split">
+        <div class="visual"><img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1200&q=85" alt="Zamonaviy qurilish maydoni"><div class="floating-card"><small>IMORA WORKSPACE</small><strong>Barcha loyihalar. Bitta boshqaruv.</strong></div></div>
+        <div><div class="eyebrow">Boshqaruv markazi</div><div class="section-head" style="margin:15px 0 0"><h2>Biznesingizni raqamli muhitga olib chiqing</h2><p>Har bir loyiha bo‘yicha muhim ma’lumotlar doimo qo‘l ostingizda. Jamoa bilan hamkorlik qiling va qarorlarni aniq ma’lumotlarga asoslanib qabul qiling.</p></div>
+          <div class="checklist"><div class="check"><b>✓</b><span>Loyihalar holati va bajarilish jarayonini kuzatish</span></div><div class="check"><b>✓</b><span>Materiallar, resurslar va xarajatlarni boshqarish</span></div><div class="check"><b>✓</b><span>Jamoa va hamkorlar bilan yagona tizimda ishlash</span></div></div>
+          <a class="btn btn-outline" href="#contact">Imkoniyatlarni o‘rganish ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">Qanday ishlaydi?</div><h2>Uch qadamda samarali boshqaruv</h2><p>IMORA bilan ish jarayonini boshlash sodda. Platforma sizning qurilish biznesingizga moslashadi.</p></div>
+        <div class="steps">
+          <article class="step"><div class="step-no">01</div><h3>Ro‘yxatdan o‘ting</h3><p>Kompaniyangiz profilini yarating va jamoa a’zolarini platformaga taklif qiling.</p></article>
+          <article class="step"><div class="step-no">02</div><h3>Loyihani kiriting</h3><p>Loyiha ma’lumotlari, smeta, resurslar va ish bosqichlarini shakllantiring.</p></article>
+          <article class="step"><div class="step-no">03</div><h3>Boshqarishni boshlang</h3><p>Jarayonlarni kuzating, tahlil qiling va ma’lumotga asoslangan qarorlar qabul qiling.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" style="padding-top:20px">
+      <div class="wrap split">
+        <div><div class="eyebrow">Nega IMORA?</div><div class="section-head" style="margin:15px 0 0"><h2>Qurilishda aniqlik — muvaffaqiyatning poydevori</h2><p>Biz qurilish kompaniyalari uchun boshqaruvni soddalashtiradigan, ma’lumotlarni birlashtiradigan va ish samaradorligini oshirishga xizmat qiladigan raqamli ekotizim yaratmoqdamiz.</p></div><a class="btn btn-primary" href="#contact">Biz bilan bog‘lanish ↗</a></div>
+        <div class="visual"><img src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1200&q=85" alt="Zamonaviy arxitektura"><div class="floating-card"><small>OUR VISION</small><strong>Build smarter. Build better.</strong></div></div>
+      </div>
+    </section>
+
+    <section class="cta" id="contact"><div class="wrap"><div class="cta-box"><div class="eyebrow">Keyingi qadamingiz</div><h2>Qurilish biznesingizni yangi bosqichga olib chiqing</h2><p>IMORA imkoniyatlari bilan tanishing va loyihalaringizni yagona raqamli muhitda boshqarishni boshlang.</p><a class="btn btn-primary" href="mailto:hello@imora.uz">Biz bilan bog‘lanish ↗</a></div></div></section>
+  </main>
+  <footer><div class="wrap foot"><a class="brand" href="#top"><span class="brand-mark">◢</span>imora</a><span>© 2026 IMORA. Barcha huquqlar himoyalangan.</span><span>Build smarter.</span></div></footer>
+</body>
+</html>

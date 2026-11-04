@@ -31,3 +31,7 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Shared v2 application surface. Status colors remain semantic. */
+body { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
+h1,h2,h3 { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; }

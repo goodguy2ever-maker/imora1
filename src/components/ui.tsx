@@ -4,7 +4,7 @@ import { Loader2, X, type LucideIcon } from 'lucide-react';
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-sky-600 text-white hover:bg-sky-500 shadow-sm shadow-sky-600/20',
+  primary: 'bg-sky-500 text-slate-950 hover:bg-sky-400 shadow-sm shadow-sky-500/20',
   secondary: 'bg-slate-800 text-slate-200 ring-1 ring-inset ring-slate-600 hover:bg-slate-700 hover:text-white',
   ghost: 'text-slate-400 hover:bg-slate-800 hover:text-white',
   danger: 'bg-rose-600 text-white hover:bg-rose-500 shadow-sm shadow-rose-600/20',
@@ -191,3 +191,4 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
 export function Td({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <td className={`whitespace-nowrap px-4 py-3 text-slate-300 ${className}`}>{children}</td>;
 }
+

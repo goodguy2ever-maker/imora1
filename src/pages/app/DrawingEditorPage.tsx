@@ -385,10 +385,10 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
           >
             <defs>
               <pattern id="cell-grid" width={CELL_PX} height={CELL_PX} patternUnits="userSpaceOnUse">
-                <path d={`M ${CELL_PX} 0 L 0 0 0 ${CELL_PX}`} fill="none" stroke="#1e293b" strokeWidth="1" />
+                <path d={`M ${CELL_PX} 0 L 0 0 0 ${CELL_PX}`} fill="none" stroke="#272829" strokeWidth="1" />
               </pattern>
               <pattern id="major-grid" width={CELL_PX * 5} height={CELL_PX * 5} patternUnits="userSpaceOnUse">
-                <path d={`M ${CELL_PX * 5} 0 L 0 0 0 ${CELL_PX * 5}`} fill="none" stroke="#334155" strokeWidth="1" />
+                <path d={`M ${CELL_PX * 5} 0 L 0 0 0 ${CELL_PX * 5}`} fill="none" stroke="#3c3d3b" strokeWidth="1" />
               </pattern>
               <filter id="marker-glow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -409,13 +409,13 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                     y1={w.y1 * CELL_PX}
                     x2={w.x2 * CELL_PX}
                     y2={w.y2 * CELL_PX}
-                    stroke="#e2e8f0"
+                    stroke="#e5e2dc"
                     strokeWidth={6}
                     strokeLinecap="square"
                     className={canEdit && tool === 'erase' ? 'cursor-pointer hover:stroke-rose-400' : ''}
                     onClick={(e) => { e.stopPropagation(); removeWall(i); }}
                   />
-                  <text x={midX} y={midY - 12} textAnchor="middle" fill="#7dd3fc" fontSize={12} pointerEvents="none">
+                  <text x={midX} y={midY - 12} textAnchor="middle" fill="#ffb783" fontSize={12} pointerEvents="none">
                     {formatMeters(wallLengthM(w))}
                   </text>
                 </g>
@@ -485,12 +485,12 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                       width={Math.max(65, m.title.length * 6)}
                       height={20}
                       rx={4}
-                      fill="#0f172a"
+                      fill="#191a1b"
                       fillOpacity={0.9}
-                      stroke={isSelected ? '#fbbf24' : '#334155'}
+                      stroke={isSelected ? '#fbbf24' : '#3c3d3b'}
                       strokeWidth={1}
                     />
-                    <text x={6} y={14} fill="#e2e8f0" fontSize={9.5} fontWeight={600}>
+                    <text x={6} y={14} fill="#e5e2dc" fontSize={9.5} fontWeight={600}>
                       {shortenTitle(m.title, 14)} · {formatMoney(m.total_price, projectCurrency)}
                     </text>
                   </g>
@@ -506,7 +506,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                   y1={draftWall.start.y * CELL_PX}
                   x2={draftEnd.x * CELL_PX}
                   y2={draftEnd.y * CELL_PX}
-                  stroke="#38bdf8"
+                  stroke="#ff9a54"
                   strokeWidth={4}
                   strokeDasharray="8 6"
                   pointerEvents="none"
@@ -515,7 +515,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
                   x={((draftWall.start.x + draftEnd.x) / 2) * CELL_PX}
                   y={((draftWall.start.y + draftEnd.y) / 2) * CELL_PX - 12}
                   textAnchor="middle"
-                  fill="#38bdf8"
+                  fill="#ff9a54"
                   fontSize={12}
                   pointerEvents="none"
                 >
@@ -526,10 +526,10 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
 
             {/* Title Stamp Block in bottom-right corner */}
             <g transform={`translate(${DRAWING_WIDTH - 300} ${DRAWING_HEIGHT - 84})`} pointerEvents="none">
-              <rect width="292" height="76" fill="#0f172a" stroke="#475569" />
-              <text x="12" y="22" fill="#e2e8f0" fontSize={13} fontWeight={600}>{shortenTitle(drawing.name, 34)}</text>
-              <text x="12" y="42" fill="#94a3b8" fontSize={11}>{shortenTitle(projectName || 'Проект', 40)}</text>
-              <text x="12" y="62" fill="#94a3b8" fontSize={11}>Масштаб {CELL_M} м · {formatDate(drawing.updated_at)}</text>
+              <rect width="292" height="76" fill="#191a1b" stroke="#61615d" />
+              <text x="12" y="22" fill="#e5e2dc" fontSize={13} fontWeight={600}>{shortenTitle(drawing.name, 34)}</text>
+              <text x="12" y="42" fill="#a8a7a2" fontSize={11}>{shortenTitle(projectName || 'Проект', 40)}</text>
+              <text x="12" y="62" fill="#a8a7a2" fontSize={11}>Масштаб {CELL_M} м · {formatDate(drawing.updated_at)}</text>
             </g>
           </svg>
         </Card>

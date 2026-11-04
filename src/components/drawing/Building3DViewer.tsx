@@ -106,14 +106,14 @@ export default function Building3DViewer({
       // Background theme
       const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
       if (lightingMode === 'day') {
-        bgGrad.addColorStop(0, '#090d16');
-        bgGrad.addColorStop(1, '#0f172a');
+        bgGrad.addColorStop(0, '#101112');
+        bgGrad.addColorStop(1, '#191a1b');
       } else if (lightingMode === 'sunset') {
         bgGrad.addColorStop(0, '#1a0f1e');
-        bgGrad.addColorStop(1, '#0f172a');
+        bgGrad.addColorStop(1, '#191a1b');
       } else {
-        bgGrad.addColorStop(0, '#021329');
-        bgGrad.addColorStop(1, '#062040');
+        bgGrad.addColorStop(0, '#101112');
+        bgGrad.addColorStop(1, '#191a1b');
       }
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
@@ -135,14 +135,14 @@ export default function Building3DViewer({
       ctx.lineTo(f2.x, f2.y);
       ctx.lineTo(f3.x, f3.y);
       ctx.closePath();
-      ctx.fillStyle = lightingMode === 'sunset' ? '#1e1b2e' : '#131d31';
+      ctx.fillStyle = lightingMode === 'sunset' ? '#1e1b2e' : '#202122';
       ctx.fill();
-      ctx.strokeStyle = '#334155';
+      ctx.strokeStyle = '#3c3d3b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Floor grid lines
-      ctx.strokeStyle = '#1e293b';
+      ctx.strokeStyle = '#272829';
       ctx.lineWidth = 0.8;
       for (let x = 0; x <= DRAWING_WIDTH; x += CELL_PX * 4) {
         const pA = project(x, 0, 0, width, height);
@@ -197,9 +197,9 @@ export default function Building3DViewer({
         const t3 = project(x1 + nx, y1 + ny, wallH, width, height);
 
         // Wall colors
-        const sideColorA = lightingMode === 'sunset' ? '#4a3b32' : '#334155';
-        const sideColorB = lightingMode === 'sunset' ? '#5a463c' : '#475569';
-        const topColor = lightingMode === 'sunset' ? '#e2d5c8' : '#e2e8f0';
+        const sideColorA = lightingMode === 'sunset' ? '#4a3b32' : '#3c3d3b';
+        const sideColorB = lightingMode === 'sunset' ? '#5a463c' : '#61615d';
+        const topColor = lightingMode === 'sunset' ? '#e2d5c8' : '#e5e2dc';
 
         // Side Face 1
         ctx.beginPath();
@@ -210,7 +210,7 @@ export default function Building3DViewer({
         ctx.closePath();
         ctx.fillStyle = sideColorA;
         ctx.fill();
-        ctx.strokeStyle = '#1e293b';
+        ctx.strokeStyle = '#272829';
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -245,7 +245,7 @@ export default function Building3DViewer({
         ctx.closePath();
         ctx.fillStyle = topColor;
         ctx.fill();
-        ctx.strokeStyle = '#94a3b8';
+        ctx.strokeStyle = '#a8a7a2';
         ctx.lineWidth = 1.2;
         ctx.stroke();
       });
@@ -303,14 +303,14 @@ export default function Building3DViewer({
           const tagY = pinPt.y - 10;
 
           ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-          ctx.strokeStyle = isSel ? '#fbbf24' : '#475569';
+          ctx.strokeStyle = isSel ? '#fbbf24' : '#61615d';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.roundRect(tagX, tagY, tagW, tagH, 5);
           ctx.fill();
           ctx.stroke();
 
-          ctx.fillStyle = isSel ? '#fef08a' : '#f1f5f9';
+          ctx.fillStyle = isSel ? '#fef08a' : '#f5f3ef';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
           ctx.fillText(label, tagX + 8, tagY + tagH / 2);

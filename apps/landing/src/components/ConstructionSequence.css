@@ -1,0 +1,32 @@
+.construction-sequence{--progress:0;--plan-opacity:1;--plan-scale:1;--plan-tilt:0deg;--plan-turn:0deg;--plan-y:0%;--blueprint-opacity:0;--scene-scale:1.22;--reality:0;--reveal:100%;--hint:1;--build:0;position:relative;height:560svh;background:#063b72}
+.construction-viewport{position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate;perspective:1200px}
+.construction-grid{position:absolute;inset:0;background-color:#063b72;background-image:linear-gradient(#5da9df12 1px,transparent 1px),linear-gradient(90deg,#5da9df12 1px,transparent 1px);background-size:28px 28px}
+.construction-plan{position:absolute;width:min(100%,150vh);aspect-ratio:1280/853;top:50%;left:50%;opacity:var(--plan-opacity);transform:translate(-50%,calc(-50% + var(--plan-y))) rotateX(var(--plan-tilt)) rotateZ(var(--plan-turn)) scale(var(--plan-scale));transform-style:preserve-3d;will-change:transform,opacity}
+.construction-plan>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.construction-plan .plan-floor{opacity:0;mix-blend-mode:screen}
+.construction-scene{position:absolute;inset:0;transform:scale(var(--scene-scale));will-change:transform}
+.construction-complex,.construction-real{position:absolute;inset:0}
+.construction-complex{opacity:var(--blueprint-opacity)}
+.complex-underlay{width:100%;height:100%;object-fit:cover;opacity:calc(var(--build)*.25)}
+.complex-buildings{position:absolute;inset:0}
+.building-strip{position:absolute;top:0;height:100%;overflow:hidden;clip-path:inset(100% 0 0);will-change:transform,clip-path}
+.building-strip img{position:absolute;top:0;height:100%;object-fit:cover}
+.construction-real{clip-path:inset(var(--reveal) 0 0);opacity:var(--reality);will-change:clip-path,opacity}
+.construction-real img{height:100%;width:100%;object-fit:cover}
+.construction-scroll{position:absolute;left:calc(50% - 24px);bottom:36px;width:48px;height:58px;display:grid;place-items:center;color:white;border:1px solid #ffffff50;border-radius:30px;background:#063b7280;opacity:var(--hint)}
+.construction-stages{position:absolute;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;padding:6px 0;border:1px solid #ffffff30;border-radius:30px;background:#062a4650;backdrop-filter:blur(8px)}
+.construction-stages button{width:36px;height:34px;display:grid;place-items:center}
+.construction-stages span{width:5px;height:5px;border-radius:50%;background:#ffffff60;transition:background .2s,transform .2s}
+.construction-stages [aria-current="true"] span{background:white;transform:scale(1.6)}
+.construction-sequence button:focus-visible{outline:2px solid white;outline-offset:5px}
+.construction-progress{position:absolute;bottom:0;left:0;width:100%;height:2px;background:#d8edff;transform-origin:left;transform:scaleX(var(--progress))}
+@media(max-width:700px){.construction-sequence{height:430svh}.construction-plan{width:148%}.construction-stages{right:12px}.construction-scroll{bottom:25px}.construction-complex,.construction-real{inset:0 -30%}}
+@media(prefers-reduced-motion:reduce){.construction-sequence{height:300svh}.construction-plan .plan-floor{display:none}.construction-stages span{transition:none}}
+@media(max-width:700px){.construction-plan{width:100%}.construction-complex,.construction-real{inset:0}.construction-stages{right:10px;top:auto;bottom:18px;transform:none;flex-direction:row;padding:0 5px}.construction-scroll{bottom:18px}.complex-underlay,.building-strip img,.construction-real img{object-fit:contain}}
+/* The mist belongs to the section edge, so it enters only as the scene ends. */
+.construction-sequence::after {
+  content: ''; position: absolute; z-index: 3; pointer-events: none;
+  inset: auto 0 -1px; height: clamp(180px, 36vh, 420px);
+  background: linear-gradient(to bottom, #acd0ea00 0%, #acd0ea12 18%, #acd0ea50 43%, #acd0eaa8 68%, #acd0eaeb 88%, #acd0ea 100%);
+}
+.construction-progress { opacity: calc(1 - var(--reality)); }
