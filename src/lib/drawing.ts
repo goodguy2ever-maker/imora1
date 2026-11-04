@@ -33,6 +33,7 @@ function isMarker(value: unknown): value is EstimateMarker {
 export function parseDrawingData(raw: unknown): DrawingData {
   const obj = (raw && typeof raw === 'object' ? raw : {}) as Partial<DrawingData>;
   return {
+    sourcePlan: obj.sourcePlan && typeof obj.sourcePlan.name === 'string' && ['image/png','image/jpeg','application/pdf'].includes(obj.sourcePlan.mime) && typeof obj.sourcePlan.url === 'string' && obj.sourcePlan.url.length <= 2800000 && obj.sourcePlan.url.startsWith('data:' + obj.sourcePlan.mime + ';base64,') && /^[A-Za-z0-9+/=]+$/.test(obj.sourcePlan.url.split(',')[1] ?? '') ? obj.sourcePlan : undefined,
     walls: Array.isArray(obj.walls) ? obj.walls.filter(isWall) : [],
     labels: Array.isArray(obj.labels) ? obj.labels.filter(isLabel) : [],
     markers: Array.isArray(obj.markers) ? obj.markers.filter(isMarker).map(m => ({ ...m, total_price: Math.round(m.quantity * m.unit_price * 100) / 100 })) : [],

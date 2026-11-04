@@ -207,6 +207,7 @@ export type EstimateMarker = {
 };
 
 export type DrawingData = {
+  sourcePlan?: { name: string; mime: 'image/png' | 'image/jpeg' | 'application/pdf'; url: string };
   walls: Wall[];
   labels: DrawingLabel[];
   markers?: EstimateMarker[];

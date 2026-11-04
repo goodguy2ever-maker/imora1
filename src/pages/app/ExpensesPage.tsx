@@ -40,6 +40,10 @@ export default function ExpensesPage() {
   async function create(event: FormEvent) {
     event.preventDefault();
     setFormError('');
+    if (!projectId) { setFormError('Выберите проект.'); return; }
+    if (description.trim().length < 2 || description.trim().length > 500) { setFormError('Опишите расход: от 2 до 500 символов, например «Цемент — 20 мешков».'); return; }
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) { setFormError('Сумма должна быть больше нуля.'); return; }
+    if (!expenseDate) { setFormError('Укажите дату расхода.'); return; }
     setSaving(true);
     try {
       const { error: insErr } = await supabase.from('expenses').insert({
@@ -112,8 +116,8 @@ export default function ExpensesPage() {
       )}
 
       <Modal open={open} title="Новый расход" onClose={() => setOpen(false)}
-        footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Отмена</Button><Button onClick={create} loading={saving}>Добавить</Button></>}>
-        <form onSubmit={create} className="space-y-4">
+        footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Отмена</Button><Button type="submit" form="expense-create-form" loading={saving}>Добавить</Button></>}>
+        <form id="expense-create-form" onSubmit={create} className="space-y-4">
           <Field label="Проект">
             <Select value={projectId} onChange={(e) => setProjectId(e.target.value)} required>
               <option value="">Выберите проект</option>
@@ -128,9 +132,9 @@ export default function ExpensesPage() {
               </Select>
             </Field>
           </div>
-          <Field label="Описание"><Textarea value={description} onChange={(e) => setDescription(e.target.value)} required maxLength={500} /></Field>
+          <Field label="Описание (обязательно)"><Textarea placeholder="Например: цемент — 20 мешков" minLength={2} value={description} onChange={(e) => setDescription(e.target.value)} required maxLength={500} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Сумма"><Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></Field>
+            <Field label="Сумма"><Input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></Field>
             <Field label="Валюта">
               <Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
                 {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}

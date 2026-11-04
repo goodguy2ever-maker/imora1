@@ -299,7 +299,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             {loadingLines ? (
               <Spinner />
             ) : lines.length === 0 ? (
-              <EmptyState title="Строк нет" description={isDraft && canEstimate ? 'Добавьте позиции в смету.' : 'В этой версии нет позиций.'} />
+              <EmptyState title="Строк нет" description={isDraft && canEstimate ? 'Нажмите «Добавить строку»: укажите работу или материал, единицу, количество и цену за единицу. Сумма рассчитывается автоматически. Метки чертежа пока не переносятся сюда автоматически.' : 'В этой версии нет позиций.'} />
             ) : (
               <>
                 <Table head={['№', 'Наименование', 'Ед.', 'Кол-во', 'Цена', 'Сумма', '']}>

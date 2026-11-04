@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft, Eraser, Ruler, Save, Type, Undo2, MapPin, Trash2, Box, type LucideIcon } from 'lucide-react';
 import Building3DViewer from '@/components/drawing/Building3DViewer';
 import { supabase } from '@/lib/supabase';
@@ -21,10 +21,11 @@ import {
 import { errorMessage, formatDate, formatMoney } from '@/lib/format';
 import { canEditEstimates, type Drawing, type DrawingData, type EstimateMarker } from '@/lib/types';
 
-type Tool = 'wall' | 'label' | 'marker' | 'erase';
+type Tool = 'select' | 'wall' | 'label' | 'marker' | 'erase';
 type Point = { x: number; y: number };
 
 const TOOLS: { id: Tool; label: string; icon: LucideIcon; hint: string }[] = [
+  { id: 'select', label: 'Просмотр', icon: Ruler, hint: 'Режим просмотра. Для рисования выберите «Стена».' },
   { id: 'wall', label: 'Стена', icon: Ruler, hint: 'Протяните мышью, чтобы нарисовать стену' },
   { id: 'label', label: 'Подпись', icon: Type, hint: 'Нажмите на поле, чтобы добавить подпись' },
   { id: 'marker', label: 'Метка сметы', icon: MapPin, hint: 'Кликните на чертеже (комната / стена), чтобы привязать позицию сметы' },
@@ -67,7 +68,9 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
   const [loadError, setLoadError] = useState('');
   const [data, setData] = useState<DrawingData>({ walls: [], labels: [], markers: [] });
   const [undoStack, setUndoStack] = useState<DrawingData[]>([]);
-  const [tool, setTool] = useState<Tool>('wall');
+  const [tool, setTool] = useState<Tool>('select');
+  const [zoom, setZoom] = useState('1');
+  const canvasRef = useRef<SVGSVGElement>(null);
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const [draftWall, setDraftWall] = useState<{ start: Point; end: Point } | null>(null);
   
@@ -128,6 +131,34 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
     setData(next);
     setDirty(true);
     setSaveError('');
+  }
+
+  function downloadPlan() {
+    if (!canvasRef.current) return;
+    const svg = canvasRef.current.cloneNode(true) as SVGSVGElement;
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('width', String(DRAWING_WIDTH)); svg.setAttribute('height', String(DRAWING_HEIGHT));
+    svg.removeAttribute('style'); svg.removeAttribute('class');
+    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    background.setAttribute('width', '100%'); background.setAttribute('height', '100%'); background.setAttribute('fill', '#101112'); svg.prepend(background);
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'imora-plan.svg'; link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function uploadPlan(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]; event.target.value = '';
+    if (!file || !canEdit) return;
+    if (!['image/png', 'image/jpeg', 'application/pdf'].includes(file.type)) { setSaveError('Выберите PDF, PNG или JPG.'); return; }
+    if (file.size > 2 * 1024 * 1024) { setSaveError('Максимальный размер плана — 2 МБ. Сожмите файл перед загрузкой.'); return; }
+    try {
+      const header = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+      const valid = file.type === 'application/pdf' ? String.fromCharCode(...header.slice(0,5)) === '%PDF-' : file.type === 'image/png' ? header[0] === 137 && header[1] === 80 && header[2] === 78 && header[3] === 71 : header[0] === 255 && header[1] === 216 && header[2] === 255;
+      if (!valid) throw new Error('Содержимое файла не соответствует формату.');
+      const url = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Не удалось прочитать файл.')); reader.readAsDataURL(file); });
+      commit({ ...data, sourcePlan: { name: file.name, mime: file.type as 'image/png' | 'image/jpeg' | 'application/pdf', url } });
+      setViewMode('2d');
+    } catch (error) { setSaveError(errorMessage(error)); }
   }
 
   function undo() {
@@ -299,6 +330,16 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
         }
       />
 
+      <Card className="mb-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {canEdit && <label className="text-sm text-slate-200">Загрузить план (PDF, PNG, JPG · до 2 МБ)<input type="file" accept="application/pdf,image/png,image/jpeg" onChange={uploadPlan} className="mt-2 block text-sm" /></label>}
+          {data.sourcePlan && <a className="text-sm text-sky-400 underline" href={data.sourcePlan.url} download={data.sourcePlan.name}>Скачать исходник: {data.sourcePlan.name}</a>}
+          {viewMode === '2d' && <Button variant="secondary" onClick={downloadPlan}>Скачать разметку SVG</Button>}
+          <label className="text-sm">Масштаб просмотра<Select value={zoom} onChange={e => setZoom(e.target.value)}><option value="1">100%</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option></Select></label>
+        </div>
+        <p className="text-xs text-slate-400">PNG/JPG отображается под разметкой. Размеры подложки не откалиброваны: объёмы вводите по исходному плану. PDF просматривается отдельно и не превращается автоматически в стены или 3D. После загрузки нажмите «Сохранить».</p>
+        {data.sourcePlan?.mime === 'application/pdf' && <object data={data.sourcePlan.url} type="application/pdf" className="h-[65vh] w-full" aria-label="Исходный PDF-план"><a href={data.sourcePlan.url} download={data.sourcePlan.name}>Скачать PDF для просмотра</a></object>}
+      </Card>
       {/* 2D / 3D Mode Selector & Tools Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         {/* 2D / 3D Switcher */}
@@ -369,8 +410,10 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         {/* Canvas SVG */}
-        <Card className="overflow-hidden p-2 sm:p-3 relative">
+        <Card className="overflow-auto p-2 sm:p-3 relative">
           <svg
+            ref={canvasRef}
+            style={{ width: `${Number(zoom) * 100}%`, maxWidth: 'none' }}
             viewBox={`0 0 ${DRAWING_WIDTH} ${DRAWING_HEIGHT}`}
             className={`block w-full touch-none select-none rounded-lg bg-slate-950 ${
               canEdit && tool !== 'erase' ? 'cursor-crosshair' : ''
@@ -383,6 +426,7 @@ export default function DrawingEditorPage({ drawingId }: { drawingId: string }) 
             role="img"
             aria-label={`Чертёж: ${drawing.name}`}
           >
+            {data.sourcePlan?.mime.startsWith('image/') && <image href={data.sourcePlan.url} width={DRAWING_WIDTH} height={DRAWING_HEIGHT} preserveAspectRatio="xMidYMid meet" opacity={0.7} pointerEvents="none" />}
             <defs>
               <pattern id="cell-grid" width={CELL_PX} height={CELL_PX} patternUnits="userSpaceOnUse">
                 <path d={`M ${CELL_PX} 0 L 0 0 0 ${CELL_PX}`} fill="none" stroke="#272829" strokeWidth="1" />
