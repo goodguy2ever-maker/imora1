@@ -35,3 +35,53 @@
 /* Shared v2 application surface. Status colors remain semantic. */
 body { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
 h1,h2,h3 { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; }
+
+/* Workspace glass UI kit. Scoped so the public landing and auth keep their design. */
+.workspace-glass {
+  --glass-line: rgba(255,255,255,.11);
+  --glass-surface: rgba(35,36,38,.68);
+  background: radial-gradient(ellipse at 90% 0%,rgba(255,132,46,.10),transparent 45%),radial-gradient(ellipse at 18% 65%,rgba(166,184,193,.07),transparent 48%),#111214;
+  background-attachment: fixed;
+}
+.workspace-glass .workspace-sidebar {
+  height:calc(100dvh - 32px); top:16px; margin:16px 0 16px 16px;
+  border:1px solid var(--glass-line); border-radius:24px;
+  background:linear-gradient(155deg,rgba(54,54,56,.64),rgba(24,25,27,.86));
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  box-shadow:inset 0 1px 0 #ffffff0d,0 20px 60px #00000026;
+  overflow-y:auto;
+}
+.workspace-glass .workspace-mobile-sidebar {background:rgba(24,25,27,.96);backdrop-filter:blur(20px);border-color:var(--glass-line)}
+.workspace-glass .workspace-topbar {
+  background:rgba(20,21,23,.78);border-color:#ffffff0a;min-height:76px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.workspace-glass .workspace-brand-mark {background:linear-gradient(140deg,#ffae72,#ff842e);color:#1a120d;box-shadow:0 4px 18px #ff842e25;border:1px solid #ffffff30;border-radius:12px}
+.workspace-glass .workspace-brand-mark svg{color:#25180e}
+.workspace-glass .workspace-nav-item {border:1px solid transparent;border-radius:13px;min-height:44px;color:#b7b5af;transition:background .18s,border-color .18s,color .18s}
+.workspace-glass .workspace-nav-item:hover{background:#ffffff08;color:#f5f3ef;border-color:#ffffff0a}
+.workspace-glass .workspace-nav-item[aria-current="page"]{background:linear-gradient(110deg,#ff842e24,#ff842e0b);border-color:#ff9a5438;color:#ffc69e;box-shadow:inset 3px 0 0 #ff842e,0 5px 14px #00000012}
+.workspace-glass .ui-card {background:linear-gradient(135deg,rgba(47,48,50,.72),rgba(28,29,31,.82));border:1px solid var(--glass-line);border-radius:20px;box-shadow:inset 0 1px 0 #ffffff08,0 12px 36px #0000001a;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.workspace-glass .ui-card .ui-card {backdrop-filter:none;-webkit-backdrop-filter:none;background:#ffffff04;box-shadow:none}
+.workspace-glass .ui-page-header {margin-bottom:28px}
+.workspace-glass .ui-page-header h1{font-size:clamp(25px,2.5vw,32px);letter-spacing:-.035em}
+.workspace-glass .ui-page-header p{color:#aaa9a4;max-width:65ch;margin-top:8px}
+.workspace-glass .ui-button {min-height:40px;border-radius:12px;font-weight:600;border:1px solid transparent;box-shadow:none}
+.workspace-glass .ui-button-primary {background:linear-gradient(180deg,#ff9a50,#ff842e);color:#23160c;border-color:#ffbb8640;box-shadow:0 4px 15px #ff842e15}
+.workspace-glass .ui-button-primary:hover:not(:disabled){background:#ffad71;box-shadow:0 5px 20px #ff842e25}
+.workspace-glass .ui-button-secondary {background:#ffffff07;border:1px solid #ffffff20;color:#e5e2dc;--tw-ring-color:transparent;box-shadow:inset 0 1px 0 #ffffff08}
+.workspace-glass .ui-button-secondary:hover:not(:disabled){background:#ffffff10;border-color:#ffffff35}
+.workspace-glass .ui-field {background:#11121485;border-color:#ffffff26;border-radius:12px;min-height:42px;color:#f5f3ef;box-shadow:inset 0 1px 3px #00000015}
+.workspace-glass .ui-field::placeholder{color:#9c9b96}
+.workspace-glass .ui-field:focus{border-color:#ff9a54;outline:2px solid #ff842e35;outline-offset:2px;box-shadow:none}
+.workspace-glass select option {background:#202123;color:#f5f3ef}
+.workspace-glass .ui-modal {background:linear-gradient(145deg,#2b2c2ef5,#191a1bfa);border-color:#ffffff26;box-shadow:inset 0 1px 0 #ffffff12,0 32px 100px #00000088;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.workspace-glass .ui-table thead{background:#ffffff04}
+.workspace-glass .ui-table th{color:#afaea9;font-size:11px;letter-spacing:.08em;padding-top:16px;padding-bottom:16px}
+.workspace-glass .ui-table td{padding-top:16px;padding-bottom:16px;color:#ddd9d3}
+.workspace-glass .ui-table tbody{border-color:#ffffff09}
+.workspace-glass .ui-table tbody tr:hover{background:#ffffff04}
+.workspace-glass button:focus-visible,.workspace-glass a:focus-visible {outline:2px solid #ffad71;outline-offset:3px}
+@media(max-width:1023px){.workspace-glass{background-attachment:scroll}.workspace-glass .ui-card{backdrop-filter:none;-webkit-backdrop-filter:none;background:#252628e8}.workspace-glass .workspace-topbar{min-height:64px}.workspace-glass .ui-page-header{margin-bottom:22px}}
+@media(prefers-reduced-motion:reduce){.workspace-glass *{transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-transparency:reduce){.workspace-glass .ui-card,.workspace-glass .workspace-sidebar,.workspace-glass .workspace-topbar,.workspace-glass .ui-modal{backdrop-filter:none;-webkit-backdrop-filter:none;background:#242527}}
