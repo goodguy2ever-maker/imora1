@@ -1,8 +1,8 @@
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
@@ -279,6 +279,8 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
   try {
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "Требуется вход в систему" }, 401);
@@ -300,6 +302,18 @@ Deno.serve(async (req: Request) => {
     if (profileErr) throw profileErr;
     if (!profile || profile.status !== "active") return json({ error: "Доступ запрещён" }, 403);
     const caller = profile as CallerProfile;
+    // Validate assurance through the authenticated Data API, never a client flag.
+    if (caller.role === "SUPER_ADMIN") {
+      const scoped = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data: assurance, error: assuranceError } = await scoped.rpc("admin_mfa_verified");
+      if (assuranceError || assurance !== true) {
+        return json({ error: "Подтвердите вход вторым фактором" }, 403);
+      }
+    }
+
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const action = body?.action;

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/useAuth';
 import { Alert, Badge, Button, Card, Field, Input, PageHeader } from '@/components/ui';
@@ -14,29 +14,24 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+
 
   const isAdmin = access?.role === 'COMPANY_ADMIN';
 
-  async function loadCompany() {
-    if (!access?.company_id || loaded) return;
-    const { data, error: qErr } = await supabase
-      .from('companies')
-      .select('name,city,contact_email,contact_phone')
-      .eq('id', access.company_id)
-      .maybeSingle();
-    if (qErr) { setError(errorMessage(qErr)); return; }
-    if (data) {
-      const c = data as { name: string; city: string | null; contact_email: string | null; contact_phone: string | null };
-      setName(c.name);
-      setCity(c.city ?? '');
-      setContactEmail(c.contact_email ?? '');
-      setContactPhone(c.contact_phone ?? '');
-      setLoaded(true);
-    }
-  }
-
-  if (!loaded) void loadCompany();
+  useEffect(() => {
+    let active = true;
+    if (!access?.company_id) return;
+    void supabase.from('companies').select('name,city,contact_email,contact_phone')
+      .eq('id', access.company_id).maybeSingle().then(({ data, error: queryError }) => {
+        if (!active) return;
+        if (queryError) { setError('Не удалось загрузить настройки компании. Обновите страницу.'); return; }
+        if (data) {
+          setName(data.name); setCity(data.city ?? '');
+          setContactEmail(data.contact_email ?? ''); setContactPhone(data.contact_phone ?? '');
+        }
+      });
+    return () => { active = false; };
+  }, [access?.company_id]);
 
   async function save(event: FormEvent) {
     event.preventDefault();

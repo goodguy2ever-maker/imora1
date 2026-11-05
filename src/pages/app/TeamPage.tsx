@@ -14,6 +14,7 @@ export default function TeamPage() {
   const { team, loading, error, reload } = useTeam();
   const selfId = session?.user.id;
   const [rowError, setRowError] = useState('');
+  const [notice, setNotice] = useState('');
   const [open, setOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState<Profile | null>(null);
   const [formError, setFormError] = useState('');
@@ -58,6 +59,7 @@ export default function TeamPage() {
         // Non-blocking email dispatch
       }
 
+      setNotice('Сотрудник создан. Письмо автоматически не отправлено: передайте адрес входа и пароль по согласованному защищённому каналу.');
       setOpen(false);
       setEmail(''); setPassword(''); setFullName(''); setPosition(''); setRole('MEMBER');
       await reload();
@@ -124,6 +126,7 @@ export default function TeamPage() {
         actions={<Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> Пригласить сотрудника</Button>}
       />
 
+      {notice && <div className="mb-4"><Alert tone="info">{notice}</Alert></div>}
       {(error || rowError) && <div className="mb-4"><Alert tone="error">{error || rowError}</Alert></div>}
 
       {loading ? (

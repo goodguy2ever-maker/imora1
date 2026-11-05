@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { errorMessage } from '@/lib/format';
 export default function DemoRequestForm() {
   const [fullName, setFullName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -14,7 +13,12 @@ export default function DemoRequestForm() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (loading) return;
     setError('');
+    if (fullName.trim().length < 2 || companyName.trim().length < 2 || contact.trim().length < 5 || !position.trim()) {
+      setError('Ism, kompaniya va aloqa ma’lumotlarini to‘liq kiriting.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -28,8 +32,8 @@ export default function DemoRequestForm() {
 
       if (rpcError) throw rpcError;
       setDone(true);
-    } catch (err) {
-      setError(errorMessage(err, 'So‘rov yuborilmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.'));
+    } catch {
+      setError('So‘rov yuborilmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.');
     } finally {
       setLoading(false);
     }
