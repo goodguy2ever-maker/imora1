@@ -92,12 +92,16 @@ export function AppShell({
         </button>
       </aside>}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="workspace-main-panel flex min-w-0 flex-1 flex-col">
         <header className="workspace-topbar sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur sm:px-8">
           <button onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden" aria-label="Открыть меню">
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0"><p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-400">Рабочее пространство</p><h2 className="truncate text-sm font-semibold text-white">{title}</h2></div>
+          <div className="workspace-context ml-auto hidden items-center gap-3 sm:flex">
+            <span>{new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' }).format(new Date())}</span>
+            <span className="workspace-context-badge">{subtitle}</span>
+          </div>
         </header>
         <main className="workspace-content mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
       </div>

@@ -85,3 +85,39 @@ h1,h2,h3 { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; }
 @media(max-width:1023px){.workspace-glass{background-attachment:scroll}.workspace-glass .ui-card{backdrop-filter:none;-webkit-backdrop-filter:none;background:#252628e8}.workspace-glass .workspace-topbar{min-height:64px}.workspace-glass .ui-page-header{margin-bottom:22px}}
 @media(prefers-reduced-motion:reduce){.workspace-glass *{transition:none!important;scroll-behavior:auto!important}}
 @media(prefers-reduced-transparency:reduce){.workspace-glass .ui-card,.workspace-glass .workspace-sidebar,.workspace-glass .workspace-topbar,.workspace-glass .ui-modal{backdrop-filter:none;-webkit-backdrop-filter:none;background:#242527}}
+
+/* Frosted architectural workspace; real data and navigation remain unchanged. */
+.workspace-glass{position:relative;isolation:isolate;gap:18px;padding:18px;background:#37332f}
+.workspace-glass::before{content:"";position:fixed;inset:-20px;z-index:-1;pointer-events:none;background:linear-gradient(120deg,#1c1b1b7a,#2b221b6b),url('/images/building-reality.jpg') center/cover;filter:blur(10px) saturate(.45);transform:scale(1.025)}
+.workspace-glass .workspace-sidebar{top:18px;margin:0;height:calc(100dvh - 36px);width:232px;padding:22px 14px;border-radius:26px;background:linear-gradient(160deg,#393735bc,#262525d6);border:1px solid #ffffff26;backdrop-filter:blur(32px) saturate(1.2);-webkit-backdrop-filter:blur(32px) saturate(1.2);box-shadow:inset 0 1px 0 #ffffff20,0 18px 60px #00000030}
+.workspace-glass .workspace-nav{gap:6px}
+.workspace-glass .workspace-nav-item{min-height:46px;font-size:13px;color:#d4d0cc;border-radius:14px}
+.workspace-glass .workspace-nav-item[aria-current="page"]{color:#20130b;background:linear-gradient(135deg,#ffa04f,#ff781e);border-color:#ffc49480;box-shadow:0 5px 18px #ff7b2033,inset 0 1px 0 #ffffff40}
+.workspace-glass .workspace-main-panel{border:1px solid #ffffff26;border-radius:28px;min-height:calc(100dvh - 36px);background:linear-gradient(130deg,#393735bd,#292827d1);backdrop-filter:blur(32px) saturate(1.15);-webkit-backdrop-filter:blur(32px) saturate(1.15);box-shadow:inset 0 1px 0 #ffffff24,0 20px 70px #00000026}
+.workspace-glass .workspace-topbar{top:18px;min-height:82px;border-radius:27px 27px 0 0;background:#333230b3;border-bottom:1px solid #ffffff12;padding-inline:28px}
+.workspace-glass .workspace-content{max-width:1440px;padding:28px}
+.workspace-context{font-size:12px;color:#d3cdc5}
+.workspace-context-badge{border:1px solid #ffffff1a;border-radius:999px;padding:8px 12px;background:#ffffff08;color:#eee9e3}
+.workspace-glass .ui-card{background:linear-gradient(145deg,#5b56523d,#24242368);border-color:#ffffff22;border-radius:21px;box-shadow:inset 0 1px 0 #ffffff14,0 8px 24px #00000012;backdrop-filter:none;-webkit-backdrop-filter:none}
+.workspace-glass .ui-page-header h1{font-size:clamp(24px,2.2vw,32px);font-weight:600;letter-spacing:-.045em}
+.workspace-glass .ui-page-header p{color:#cbc4bc;font-size:13px}
+.workspace-glass .dashboard-stat.ui-card{background:linear-gradient(135deg,#ffffff,#f3f0eb);border:1px solid #ffffffd9;box-shadow:0 8px 22px #00000015,inset 0 1px 0 #ffffff;border-radius:19px;min-height:118px}
+.workspace-glass .dashboard-stat .text-white{color:#282521;font-size:32px;letter-spacing:-.04em}
+.workspace-glass .dashboard-stat .text-slate-400{color:#68635d;font-size:12px;line-height:1.5}
+.workspace-glass .dashboard-stat svg{width:22px;height:22px}
+.workspace-glass .dashboard-stat .h-10{height:46px;width:46px;border-radius:15px}
+.workspace-glass .dashboard-budget.ui-card{background:linear-gradient(145deg,#fffefb,#eeeae4);border-color:#fff;box-shadow:0 8px 24px #00000016;color:#282521}
+.workspace-glass .dashboard-budget .text-white{color:#282521}
+.workspace-glass .dashboard-budget .text-slate-300{color:#45403a}
+.workspace-glass .dashboard-budget .text-slate-400{color:#68615a}
+.workspace-glass .dashboard-budget .bg-slate-700{background:#ddd6cc}
+.workspace-glass .dashboard-budget .text-sky-700{color:#d46319}
+.workspace-glass .dashboard-reports li{border-color:#ffffff15}
+.workspace-glass .dashboard-expenses th{font-size:11px;letter-spacing:.035em;padding-bottom:16px}
+.workspace-glass .dashboard-expenses td{padding-top:16px;padding-bottom:16px}
+.workspace-glass .dashboard-expenses tbody tr:hover{background:#ffffff05}
+@media(min-width:1280px){.workspace-glass .dashboard-overview.lg\:grid-cols-2{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}
+@media(max-width:1023px){.workspace-glass{padding:10px;gap:0}.workspace-glass::before{position:absolute;filter:blur(7px) saturate(.45)}.workspace-glass .workspace-main-panel{min-height:calc(100dvh - 20px);border-radius:22px;background:#30302dda;backdrop-filter:none;-webkit-backdrop-filter:none}.workspace-glass .workspace-topbar{top:10px;border-radius:21px 21px 0 0;padding-inline:16px;min-height:70px}.workspace-glass .workspace-content{padding:22px 18px}.workspace-glass .workspace-mobile-sidebar{background:#302e2bf5;border-color:#ffffff30}}
+@media(max-width:639px){.workspace-glass{padding:6px}.workspace-glass .workspace-main-panel{border-radius:19px;min-height:calc(100dvh - 12px)}.workspace-glass .workspace-topbar{top:6px;border-radius:18px 18px 0 0}.workspace-glass .workspace-content{padding:22px 14px}.workspace-glass .dashboard-stat.ui-card{min-height:94px;padding:18px}.workspace-glass .dashboard-overview{gap:16px;margin-top:18px}.workspace-glass .dashboard-budget,.workspace-glass .dashboard-reports,.workspace-glass .dashboard-expenses{padding:20px}}
+@supports not (backdrop-filter:blur(1px)){.workspace-glass .workspace-main-panel,.workspace-glass .workspace-sidebar{background:#34312f}}
+@media(prefers-reduced-transparency:reduce){.workspace-glass::before{display:none}.workspace-glass .workspace-main-panel,.workspace-glass .workspace-sidebar,.workspace-glass .workspace-topbar{background:#302e2c;backdrop-filter:none;-webkit-backdrop-filter:none}}

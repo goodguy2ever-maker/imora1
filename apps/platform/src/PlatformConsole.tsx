@@ -1,4 +1,3 @@
-import AdminMfaGate from '@/components/AdminMfaGate';
 import { useState } from 'react';
 import {
   Users,
@@ -19,7 +18,7 @@ import { useAuth } from '@/context/useAuth';
 
 type Tab = 'requests' | 'companies' | 'billing' | 'audit';
 
-function PlatformConsoleContent({ onSignOut }: { onSignOut: () => void }) {
+export default function PlatformConsole({ onSignOut }: { onSignOut: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('requests');
   const { session } = useAuth();
   const adminUser = session?.user.email ?? 'Администратор платформы';
@@ -139,8 +138,4 @@ function PlatformConsoleContent({ onSignOut }: { onSignOut: () => void }) {
       </main>
     </div>
   );
-}
-
-export default function PlatformConsole(props: { onSignOut: () => void }) {
-  return <AdminMfaGate><PlatformConsoleContent {...props} /></AdminMfaGate>;
 }

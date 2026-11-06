@@ -32,7 +32,7 @@ function service(role = 'SUPER_ADMIN', status = 'active') {
       },
     },
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: 'actor-a', role, status, company_id: 'company-a' } }) }) }) }),
-    rpc: async (name, args) => { if (name === 'admin_mfa_verified') return { data: true }; calls.push(['rpc', name, args]); return { data: 'created-company' }; },
+    rpc: async (name, args) => { calls.push(['rpc', name, args]); return { data: 'created-company' }; },
   };
 }
 const payload = {
@@ -69,7 +69,7 @@ test('request activation selects the atomic RPC and passes the request identifie
 });
 test('RPC failure compensates the newly created Auth user', async () => {
   const backend = service();
-  backend.rpc = async name => name === 'admin_mfa_verified' ? { data: true } : { error: { message: 'Request already activated' } };
+  backend.rpc = async () => ({ error: { message: 'Request already activated' } });
   assert.equal((await edge(backend)(payload)).status, 400);
   assert.equal(backend.calls.at(-1)[0], 'deleteUser');
   assert.equal(backend.calls.at(-1)[1], 'admin-a');
@@ -80,17 +80,3 @@ test('malformed request identifier fails before creating an Auth user', async ()
   assert.equal(backend.calls.length, 0);
 });
 
-test('superadmin without a verified second factor cannot mutate accounts', async () => {
-  const backend = service();
-  backend.rpc = async () => ({ data: false });
-  const response = await edge(backend)(payload);
-  assert.equal(response.status, 403);
-  assert.equal(backend.calls.length, 0);
-});
-test('MFA verification backend error fails closed', async () => {
-  const backend = service();
-  backend.rpc = async () => ({ error: { message: 'unavailable' } });
-  const response = await edge(backend)(payload);
-  assert.equal(response.status, 403);
-  assert.equal(backend.calls.length, 0);
-});

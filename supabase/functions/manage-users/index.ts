@@ -302,19 +302,6 @@ Deno.serve(async (req: Request) => {
     if (profileErr) throw profileErr;
     if (!profile || profile.status !== "active") return json({ error: "Доступ запрещён" }, 403);
     const caller = profile as CallerProfile;
-    // Validate assurance through the authenticated Data API, never a client flag.
-    if (caller.role === "SUPER_ADMIN") {
-      const scoped = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
-      const { data: assurance, error: assuranceError } = await scoped.rpc("admin_mfa_verified");
-      if (assuranceError || assurance !== true) {
-        return json({ error: "Подтвердите вход вторым фактором" }, 403);
-      }
-    }
-
-
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const action = body?.action;
 

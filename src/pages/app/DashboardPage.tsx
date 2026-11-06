@@ -44,14 +44,14 @@ export default function DashboardPage() {
   const canSeeFinance = access?.role ? canSeeConstructionFinance(access.role) : false;
 
   return (
-    <div>
+    <div className="workspace-dashboard">
       <PageHeader title={`Здравствуйте, ${access?.full_name ?? ''}`} description="Сводка по компании на сегодня" />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="dashboard-stats grid gap-4 sm:grid-cols-3">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <Card key={s.label} className="p-5">
+            <Card key={s.label} className="dashboard-stat p-5">
               <div className="flex items-center gap-3">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${s.tone}`}>
                   <Icon className="h-5 w-5" aria-hidden />
@@ -66,9 +66,9 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className={`mt-6 grid gap-6 ${canSeeFinance ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={`dashboard-overview mt-6 grid gap-6 ${canSeeFinance ? 'lg:grid-cols-2' : 'grid-cols-1'}`}>
         {canSeeFinance && (
-          <Card className="p-6">
+          <Card className="dashboard-budget p-6">
             <div className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-sky-700" aria-hidden />
               <h2 className="font-semibold text-white">Бюджет и расходы</h2>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        <Card className="p-6">
+        <Card className="dashboard-reports p-6">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-sky-700" aria-hidden />
             <h2 className="font-semibold text-white">Последние отчёты со стройплощадки</h2>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
       </div>
 
       {canSeeFinance && (
-        <Card className="mt-6 p-6">
+        <Card className="dashboard-expenses mt-6 p-6">
           <div className="flex items-center gap-2">
             <ArrowRight className="h-5 w-5 text-sky-400" aria-hidden />
             <h2 className="font-semibold text-white">Последние расходы</h2>

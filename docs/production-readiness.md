@@ -1,5 +1,7 @@
 # IMORA: production readiness, 2026-11-05
 
+Current access policy: owner explicitly requested email/password admin login without mandatory MFA. The enrollment screen and AAL2 requirement are removed by a follow-up migration. Active SUPER_ADMIN authorization remains mandatory.
+
 Status: hardening release; public market launch is NOT approved by this document.
 Primary URL for now: https://imora1.vercel.app (owner has not selected a domain).
 
@@ -20,7 +22,7 @@ A live aggregate read on 2026-11-05 found 1 request, 0 with status new. No perso
 - Dependency patches; minimatch override 11.0.4 for typescript-estree fixes GHSA-g3hv-75wg-m249. Revisit when upstream updates.
 - Automated TypeScript, Node regression tests, production dependency audit and build workflow.
 
-## Deployment sequence
+## Historical MFA rollout (superseded by owner request)
 1. Deploy frontend on Vercel and verify /, /login, /admin redirects, /robots.txt, /sitemap.xml and /brand/imora-logo.svg.
 2. Apply require_admin_mfa migration, then deploy manage-users with verify_jwt=true.
 3. Owner logs in at /admin, enrolls authenticator, saves the setup key securely and verifies the first code.
@@ -35,7 +37,7 @@ Emergency MFA recovery requires verified owner access to Supabase, not a public 
 - Confirm Supabase Site URL and allowed reset redirects, signup disabled, leaked-password protection available/enabled.
 - Enable error monitoring and alert routing; choose responsible person and response targets.
 - Establish database backups and perform an isolated restore drill. No recovery-time claim until tested.
-- Owner must complete MFA enrollment and end-to-end authorized workspace/admin acceptance.
+- Owner must complete end-to-end authorized workspace/admin acceptance.
 - Uploaded source plans remain limited to 2 MB and stored as base64 in drawing JSON. Move large plans to private Storage with tenant RLS, signed URLs and retention before scaling.
 - Estimates are manually entered/approved. Uploaded PDFs are not automatically measured; drawings are not professional CAD/BIM. Avoid these marketing claims.
 - Subscription payments are manual; no real acquiring integration is configured.
@@ -51,3 +53,21 @@ Keep structured data consistent with actual product behavior; no fabricated revi
 An npm audit with zero known advisories is not a penetration test. SQL fixtures run in an isolated database, not customer production data.
 RLS and server authorization remain the security boundary; robots.txt and hiding admin navigation are not access controls.
 Supabase advisor warnings for explicitly authenticated SECURITY DEFINER business RPCs require continued review of their role checks/search_path.
+
+## Verified release evidence
+Frontend commit 88be2c84f2decb558fb4a637e6a47a0c6996f233: Vercel production READY, deployment dpl_3ExUPYEQM68BTatjNVRBtmSpFrMq.
+GitHub Actions Product checks run 42066990853: success (npm ci, TypeScript, 52 Node tests, runtime dependency audit, production build).
+Local full npm audit: zero known advisories after updates; targeted ESLint passed.
+Isolated SQL: workspace isolation, approval immutability, activation rollback, MFA AAL1 denial/AAL2 acceptance/blocked profile denial passed.
+Live HTTP: /, /login, /admin, sitemap, robots and SVG return 200; unknown route 404; private routes return noindex; security headers present.
+Browser: landing and embedded demo render; anonymous /admin redirects to /login; title becomes Вход | IMORA.
+Hosted mandatory MFA migration applied; manage-users v7 ACTIVE with JWT verification. AAL1/AAL2 helper checks passed in a rolled-back read-only probe.
+Anonymous Data API reads: demo_requests/profiles expose 0 rows. Anonymous admin_mfa_verified and manage-users return 401. Signup remains disabled.
+Supabase advisors still warn on seven intentionally authenticated SECURITY DEFINER business functions and disabled leaked-password protection. These are not represented as a clean security report.
+Mandatory authenticator enrollment was subsequently removed at owner request. Real authenticated end-to-end acceptance remains pending.
+
+## Follow-up, 2026-11-06
+Owner rejected mandatory MFA. Removed the enrollment gate, restored password-based active SUPER_ADMIN checks on the server, and deployed manage-users v8 with JWT/role/status verification intact.
+Hosted migration: 20261106041320_remove_mandatory_admin_mfa. AAL1 active admin is accepted; blocked/unknown identities remain denied. Existing factors are not deleted.
+Workspace styling now follows the supplied reference: frosted architectural backdrop, floating sidebar and main panel, bright metric/budget tiles, orange selected navigation. Existing business data, permissions and navigation labels remain intact. Responsive and reduced-transparency fallbacks included.
+50 Node tests pass after removing the two mandatory-MFA cases; TypeScript, targeted ESLint and production build pass. Open launch blockers above remain outstanding. Repeat-request throttling was not deployed; CAPTCHA/rate limiting remain open.
