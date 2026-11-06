@@ -121,3 +121,7 @@ h1,h2,h3 { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; }
 @media(max-width:639px){.workspace-glass{padding:6px}.workspace-glass .workspace-main-panel{border-radius:19px;min-height:calc(100dvh - 12px)}.workspace-glass .workspace-topbar{top:6px;border-radius:18px 18px 0 0}.workspace-glass .workspace-content{padding:22px 14px}.workspace-glass .dashboard-stat.ui-card{min-height:94px;padding:18px}.workspace-glass .dashboard-overview{gap:16px;margin-top:18px}.workspace-glass .dashboard-budget,.workspace-glass .dashboard-reports,.workspace-glass .dashboard-expenses{padding:20px}}
 @supports not (backdrop-filter:blur(1px)){.workspace-glass .workspace-main-panel,.workspace-glass .workspace-sidebar{background:#34312f}}
 @media(prefers-reduced-transparency:reduce){.workspace-glass::before{display:none}.workspace-glass .workspace-main-panel,.workspace-glass .workspace-sidebar,.workspace-glass .workspace-topbar{background:#302e2c;backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+.workspace-glass{overflow-x:clip}
+.workspace-glass .workspace-mobile-sidebar{overflow-y:auto;overscroll-behavior:contain}
+.workspace-glass .workspace-sidebar{scrollbar-width:thin;scrollbar-color:#ffffff30 transparent}

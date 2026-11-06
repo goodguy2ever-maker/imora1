@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { LogOut, Menu, X, HardHat } from 'lucide-react';
 import Link from '@/components/Link';
 import { usePathname } from '@/lib/router';
@@ -21,6 +21,29 @@ export function AppShell({
 }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const drawer = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const oldOverflow = document.body.style.overflow;
+    const trigger = menuButton.current;
+    document.body.style.overflow = 'hidden';
+    const items = () => Array.from(drawer.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])') ?? []);
+    items()[0]?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setOpen(false); return; }
+      if (event.key !== 'Tab') return;
+      const elements = items(), first = elements[0], last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      document.removeEventListener('keydown', keydown);
+      trigger?.focus();
+    };
+  }, [open]);
 
   const isActive = (to: string) => (to === '/app' || to === '/admin' ? path === to : path.startsWith(to));
 
@@ -74,7 +97,7 @@ export function AppShell({
       </aside>
 
       {open && <div className="fixed inset-0 z-40 bg-black/70 lg:hidden" onClick={() => setOpen(false)} />}
-      {open && <aside
+      {open && <aside ref={drawer} role="dialog" aria-modal="true" aria-label="Навигация"
         className={`workspace-mobile-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-800 bg-slate-900 p-4 transition-transform duration-300 lg:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -94,7 +117,7 @@ export function AppShell({
 
       <div className="workspace-main-panel flex min-w-0 flex-1 flex-col">
         <header className="workspace-topbar sticky top-0 z-30 flex items-center gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur sm:px-8">
-          <button onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden" aria-label="Открыть меню">
+          <button ref={menuButton} aria-expanded={open} onClick={() => setOpen(true)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden" aria-label="Открыть меню">
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0"><p className="mb-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-400">Рабочее пространство</p><h2 className="truncate text-sm font-semibold text-white">{title}</h2></div>
