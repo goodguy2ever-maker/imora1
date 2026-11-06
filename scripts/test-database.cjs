@@ -21,5 +21,7 @@ const {PGlite}=require('@electric-sql/pglite');
  console.log('PASS: password-based active admin access and blocked/unknown identity denial');
  await db.exec(fs.readFileSync(path.join(root,'tests','request-throttle.sql'),'utf8'));
  console.log('PASS: repeated-contact limit, normalization, other contacts and time-window expiry');
+ await db.exec(fs.readFileSync(path.join(root,'tests','company-seats.sql'),'utf8'));
+ console.log('PASS: company seat limits, reactivation, plan downgrade and last administrator');
  await db.close();
 })().catch(e=>{console.error(e.message);process.exitCode=1;});

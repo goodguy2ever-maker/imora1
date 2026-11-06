@@ -187,6 +187,7 @@ async function createTeamMember(service: SupabaseClient, caller: CallerProfile, 
   const memberEmail = email(body.email);
   const memberPassword = password(body.password);
   const fullName = text(body.full_name, "Имя", 2, 120);
+  const memberPosition = optionalText(body.position, 120);
   const role = String(body.role ?? "MEMBER");
   if (!MEMBER_ROLES.includes(role)) throw new ActionError("Неизвестная роль");
 
@@ -202,13 +203,13 @@ async function createTeamMember(service: SupabaseClient, caller: CallerProfile, 
     company_id: caller.company_id,
     role,
     full_name: fullName,
-    position: optionalText(body.position, 120),
+    position: memberPosition,
     email: memberEmail,
     status: "active",
   });
   if (profileErr) {
     await service.auth.admin.deleteUser(created.user.id);
-    throw new ActionError("Не удалось добавить пользователя");
+    throw new ActionError(profileErr.code === "23514" ? "Достигнут лимит активных пользователей компании" : "Не удалось добавить пользователя");
   }
   await writeAudit(service, caller.id, caller.company_id, "user.created", created.user.id, { role, email: memberEmail });
   return { user_id: created.user.id };
@@ -252,7 +253,7 @@ async function updateTeamMember(service: SupabaseClient, caller: CallerProfile, 
   if (Object.keys(patch).length === 0) throw new ActionError("Нет изменений");
 
   const { error } = await service.from("profiles").update(patch).eq("id", target.id);
-  if (error) throw new ActionError("Не удалось сохранить изменения");
+  if (error) throw new ActionError(error.code === "23514" ? "Проверьте лимит пользователей и наличие другого активного администратора" : "Не удалось сохранить изменения");
   await writeAudit(service, caller.id, caller.company_id, "user.updated", target.id, patch);
   return { ok: true };
 }

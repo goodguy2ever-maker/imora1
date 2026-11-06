@@ -14,12 +14,15 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [reload, setReload] = useState(0);
 
 
   const isAdmin = access?.role === 'COMPANY_ADMIN';
 
   useEffect(() => {
     let active = true;
+    setReady(false); setError('');
     if (!access?.company_id) return;
     void supabase.from('companies').select('name,city,contact_email,contact_phone')
       .eq('id', access.company_id).maybeSingle().then(({ data, error: queryError }) => {
@@ -28,13 +31,16 @@ export default function SettingsPage() {
         if (data) {
           setName(data.name); setCity(data.city ?? '');
           setContactEmail(data.contact_email ?? ''); setContactPhone(data.contact_phone ?? '');
-        }
+          setReady(true);
+        } else { setError('Компания не найдена.'); }
       });
     return () => { active = false; };
-  }, [access?.company_id]);
+  }, [access?.company_id, reload]);
 
   async function save(event: FormEvent) {
     event.preventDefault();
+    if (!ready || saving || !isAdmin || !access?.company_id) return;
+    if (name.trim().length < 2) { setError('Название должно содержать минимум 2 символа.'); return; }
     setError('');
     setSuccess('');
     setSaving(true);
@@ -64,14 +70,15 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-white">Профиль компании</h2>
           {error && <div className="mt-4"><Alert tone="error">{error}</Alert></div>}
           {success && <div className="mt-4"><Alert tone="success">{success}</Alert></div>}
+          {!ready && <Button variant="secondary" onClick={() => setReload(n => n + 1)}>Загрузить настройки</Button>}
           <form onSubmit={save} className="mt-4 space-y-4">
-            <Field label="Название компании"><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={160} disabled={!isAdmin} /></Field>
+            <Field label="Название компании"><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={160} disabled={!isAdmin || !ready} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Город"><Input value={city} onChange={(e) => setCity(e.target.value)} maxLength={120} disabled={!isAdmin} /></Field>
-              <Field label="Контактный email"><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} maxLength={254} disabled={!isAdmin} /></Field>
+              <Field label="Город"><Input value={city} onChange={(e) => setCity(e.target.value)} maxLength={120} disabled={!isAdmin || !ready} /></Field>
+              <Field label="Контактный email"><Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} maxLength={254} disabled={!isAdmin || !ready} /></Field>
             </div>
-            <Field label="Контактный телефон"><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} maxLength={40} disabled={!isAdmin} /></Field>
-            {isAdmin && <Button type="submit" loading={saving}>Сохранить</Button>}
+            <Field label="Контактный телефон"><Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} maxLength={40} disabled={!isAdmin || !ready} /></Field>
+            {isAdmin && <Button type="submit" disabled={!ready} loading={saving}>Сохранить</Button>}
           </form>
         </Card>
 

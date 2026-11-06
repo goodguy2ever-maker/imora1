@@ -80,3 +80,33 @@ test('malformed request identifier fails before creating an Auth user', async ()
   assert.equal(backend.calls.length, 0);
 });
 
+
+function teamService() {
+  const backend = service('COMPANY_ADMIN');
+  backend.from = name => ({
+    select: () => {
+      const query = {
+        eq: () => query,
+        maybeSingle: async () => ({ data: name === 'companies'
+          ? { id:'company-a',status:'active',access_until:'2099-01-01',user_limit:5 }
+          : { id:'actor-a',role:'COMPANY_ADMIN',status:'active',company_id:'company-a' } }),
+        then: resolve => resolve({ count:1 }),
+      };
+      return query;
+    },
+    insert: async () => ({ error: { code:'23514',message:'seat limit' } }),
+  });
+  return backend;
+}
+test('invalid member position is rejected before creating an Auth account', async () => {
+  const backend = teamService();
+  const response = await edge(backend)({action:'create_team_member', email:'member@example.test',password:'test-password',full_name:'Member',role:'MEMBER',position:'x'.repeat(121)});
+  assert.equal(response.status,400);
+  assert.equal(backend.calls.length,0);
+});
+test('profile insert failure removes the newly created Auth account', async () => {
+  const backend = teamService();
+  const response = await edge(backend)({action:'create_team_member', email:'member@example.test',password:'test-password',full_name:'Member',role:'MEMBER'});
+  assert.equal(response.status,400);
+  assert.deepEqual(backend.calls.map(c=>c[0]),['createUser','deleteUser']);
+});

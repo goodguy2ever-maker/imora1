@@ -4,7 +4,7 @@ CREATE TEMP TABLE test_ids(name text PRIMARY KEY,id uuid NOT NULL DEFAULT gen_ra
 INSERT INTO test_ids(name) VALUES('company'),('other_company'),('admin'),('engineer'),('foreman'),('other_foreman'),('supply'),('seller'),('other_seller'),('sales_lead'),('member'),('other_admin'),('project'),('foreign_project'),('task'),('other_task'),('unit'),('lead'),('other_lead'),('foreign_lead'),('material');
 GRANT SELECT ON test_ids TO authenticated;
 INSERT INTO auth.users(id) SELECT id FROM test_ids WHERE name IN ('admin','engineer','foreman','other_foreman','supply','seller','other_seller','sales_lead','member','other_admin');
-INSERT INTO public.companies(id,name,status,access_until) SELECT id,name,'active',now()+interval '1 year' FROM test_ids WHERE name IN ('company','other_company');
+INSERT INTO public.companies(id,name,status,access_until,user_limit) SELECT id,name,'active',now()+interval '1 year',20 FROM test_ids WHERE name IN ('company','other_company');
 INSERT INTO public.profiles(id,company_id,role,full_name,email)
  SELECT id, (SELECT id FROM test_ids WHERE name=CASE WHEN t.name='other_admin' THEN 'other_company' ELSE 'company' END),
  CASE t.name WHEN 'admin' THEN 'COMPANY_ADMIN' WHEN 'engineer' THEN 'ENGINEER' WHEN 'foreman' THEN 'FOREMAN' WHEN 'other_foreman' THEN 'FOREMAN' WHEN 'supply' THEN 'SUPPLY_MANAGER' WHEN 'seller' THEN 'SALES_MANAGER' WHEN 'other_seller' THEN 'SALES_MANAGER' WHEN 'sales_lead' THEN 'SALES_LEAD' WHEN 'member' THEN 'MEMBER' ELSE 'COMPANY_ADMIN' END,
