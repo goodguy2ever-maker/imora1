@@ -1,73 +1,48 @@
-# IMORA: production readiness, 2026-11-05
+# IMORA — готовность к запуску, 6 ноября 2026
 
-Current access policy: owner explicitly requested email/password admin login without mandatory MFA. The enrollment screen and AAL2 requirement are removed by a follow-up migration. Active SUPER_ADMIN authorization remains mandatory.
+## Текущее состояние
+Опубликовано на https://imora1.vercel.app. Это рабочий продукт с реальной базой, но массовый коммерческий запуск ещё требует перечисленных ниже шагов.
+По прямому решению владельца вход в админку — email/пароль, без обязательного второго фактора. Сервер проверяет активную роль SUPER_ADMIN. Заблокированные и посторонние пользователи не получают доступ. Настроенные ранее факторы автоматически не удаляются.
 
-Status: hardening release; public market launch is NOT approved by this document.
-Primary URL for now: https://imora1.vercel.app (owner has not selected a domain).
+## Куда идут заявки
+Форма сохраняет данные в public.demo_requests проекта Supabase htpiufvtkqjptbmfplpg; Vercel обслуживает интерфейс. Заявки видны в разделе «Заявки» супер-админки. Автоматических уведомлений в Telegram/почту нет.
+На 5 ноября проверка показала 1 заявку, новых — 0. Анонимное чтение заявок/профилей возвращает 0 строк. Самостоятельная регистрация выключена.
+6 ноября добавлен серверный лимит: до 3 заявок с одного нормализованного контакта за час. Проверка сериализует параллельные вставки и действует при прямом обращении к API. Это не защита от ботов с разными контактами: CAPTCHA остаётся необходимой до рекламы.
 
-## Requests and data
-The landing inserts into public.demo_requests in Supabase project htpiufvtkqjptbmfplpg.
-Vercel hosts the frontend, not the customer database. Only active SUPER_ADMIN can read/process demo requests via RLS.
-The platform Requests tab is the operational inbox. No automatic Telegram/email notification is configured.
-A live aggregate read on 2026-11-05 found 1 request, 0 with status new. No personal data was exported.
+## Выполнено
+- Стеклянный воркспейс по референсу: плавающие панели, архитектурный фон, светлые показатели, оранжевые акценты. Реальные данные и роли сохранены.
+- Мобильное меню: прокрутка, ограничение клавиатурного фокуса, Escape, восстановление фокуса. При ширине 390 px горизонтального переполнения страницы нет.
+- Серверные права и изоляция компаний, запрет доступа заблокированным профилям, JWT-проверка manage-users v8.
+- Удалён браузерный Resend-секрет; ручные письма не содержат паролей и не показываются как отправленные. Создание сотрудника сообщает о необходимости вручную передать доступ.
+- CSP и защитные HTTP-заголовки; noindex/no-store приватных страниц; корректный 404 неизвестных адресов.
+- Читаемый без JS HTML лендинга, sitemap, robots, canonical, Open Graph и SoftwareApplication JSON-LD. Отдельная оболочка приватных страниц, заголовки и язык маршрутов.
+- Валидация формы заявки и понятные ошибки без SQL-текста.
+- Устранена загрузка настроек компании во время отрисовки.
+- Обновлены зависимости; полный npm audit показал 0 известных уязвимостей. Закреплён Supabase SDK; minimatch 11.0.4 переопределён для typescript-estree из-за GHSA-g3hv-75wg-m249.
+- GitHub Actions: установка из lockfile, TypeScript, 50 Node-тестов, SQL-регрессии в изолированном PGlite, аудит runtime-зависимостей, production build.
 
-## This release
-- Administrative MFA enrollment/challenge UI. Database helper and manage-users enforce AAL2 after staged backend rollout.
-- Role and tenant boundary regression tests; AAL1 and blocked admin denied. No bypass flag in browser storage.
-- No email provider secret in frontend. Manual invitation drafts exclude passwords and explicitly do not claim delivery.
-- Security headers/CSP, clickjacking protection, private-page noindex/no-store.
-- Uzbek landing metadata, canonical, sitemap, structured SoftwareApplication data, static public HTML.
-- Separate private application HTML prevents a landing-page flash on login/workspace routes.
-- Per-route titles/language; empty/whitespace lead validation and public-safe error messages.
-- Dependency patches; minimatch override 11.0.4 for typescript-estree fixes GHSA-g3hv-75wg-m249. Revisit when upstream updates.
-- Automated TypeScript, Node regression tests, production dependency audit and build workflow.
+## Проверки
+TypeScript, production build и ESLint всего текущего интерфейсного кода проходят. 50 Node-тестов проходят.
+Изолированная SQL-база: RLS/роли, изоляция компаний, неизменность утверждённых смет, откат активации компании, запрет заблокированному/неизвестному администратору, лимит заявок и окончание его окна.
+Рабочий API: анонимные административные операции получают 401; signup disabled=true. На сервере проверен вход активного администратора без AAL2. Триггер лимита заявок включён.
+В браузере проверены настоящий дашборд, данные, мобильная ширина и клавиатурное меню. Заявки-тесты не отправлялись с реальными контактами.
 
-## Historical MFA rollout (superseded by owner request)
-1. Deploy frontend on Vercel and verify /, /login, /admin redirects, /robots.txt, /sitemap.xml and /brand/imora-logo.svg.
-2. Apply require_admin_mfa migration, then deploy manage-users with verify_jwt=true.
-3. Owner logs in at /admin, enrolls authenticator, saves the setup key securely and verifies the first code.
-4. Check that AAL1 cannot list requests or mutate accounts, and owner AAL2 can use the console.
-Do not roll back to a frontend without the enrollment screen while mandatory MFA remains enabled.
-Emergency MFA recovery requires verified owner access to Supabase, not a public application bypass.
+## Что ещё мешает открытому запуску
+1. Владелец не определил реквизиты, публичный контакт поддержки/персональных данных и основной домен. Нужны настоящие документы, правила хранения/удаления данных и условия обслуживания.
+2. Серверная CAPTCHA и более сильное ограничение автоматического потока заявок.
+3. Проверенный почтовый домен/SMTP, приглашения и восстановление пароля на production-адресе. Сейчас доставка приглашений вручную; черновик письма не является отправкой.
+4. Подключённый мониторинг ошибок, получатель аварийных уведомлений и ответственность за поддержку.
+5. Политика резервных копий и успешное тестовое восстановление в отдельной базе.
+6. Приёмка полного бизнес-процесса сотрудниками разных компаний: проект → смета → снабжение → расход → отчёт; CRM → платёж.
+7. Для роста: перенос планов из base64 JSON в приватный Storage с изоляцией, подписанными ссылками и правилами удаления. Сейчас лимит файла 2 МБ.
+8. Сметы вводятся и утверждаются вручную. PDF не измеряется автоматически, редактор не заменяет профессиональный CAD/BIM. Онлайн-эквайринг не подключён; расчёты за доступ ручные.
 
-## Launch blockers / owner decisions
-- Operator legal identity, support/privacy contact, privacy notice/terms, retention/deletion rules remain undetermined. Do not fabricate these.
-- Bot protection for public request intake is not configured. Existing input checks/RLS do NOT prevent anonymous spam. Add server-verified CAPTCHA plus request throttling before advertising.
-- Configure verified SMTP/invitation delivery and exercise password recovery on the production origin. Manual drafts are not delivery.
-- Confirm Supabase Site URL and allowed reset redirects, signup disabled, leaked-password protection available/enabled.
-- Enable error monitoring and alert routing; choose responsible person and response targets.
-- Establish database backups and perform an isolated restore drill. No recovery-time claim until tested.
-- Owner must complete end-to-end authorized workspace/admin acceptance.
-- Uploaded source plans remain limited to 2 MB and stored as base64 in drawing JSON. Move large plans to private Storage with tenant RLS, signed URLs and retention before scaling.
-- Estimates are manually entered/approved. Uploaded PDFs are not automatically measured; drawings are not professional CAD/BIM. Avoid these marketing claims.
-- Subscription payments are manual; no real acquiring integration is configured.
-- Run tenant UAT for project → estimate → procurement → expense → report and CRM → payment before accepting paying companies.
-
-## SEO / GEO
-Technical metadata and crawlable text are implemented, not ranking guarantees. Connect Search Console, submit sitemap and inspect indexing after launch.
-Google states its ordinary SEO practices apply to AI features; no special AI file guarantees inclusion:
+## Ограничения оценки безопасности и SEO
+Нулевой npm audit не заменяет пентест. Supabase Advisor предупреждает о семи доступных аутентифицированным пользователям SECURITY DEFINER бизнес-функциях (нужен дальнейший контроль их проверок прав) и отключённой защите от утёкших паролей:
+https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+SEO/GEO: техническая база готова, позиции и включение в AI-ответы не гарантированы. Нужно подключить Search Console и проверить индексацию. Google применяет обычные требования SEO и к AI-функциям:
 https://developers.google.com/search/docs/appearance/ai-features
-Keep structured data consistent with actual product behavior; no fabricated reviews, prices or operator identities.
 
-## Security scope
-An npm audit with zero known advisories is not a penetration test. SQL fixtures run in an isolated database, not customer production data.
-RLS and server authorization remain the security boundary; robots.txt and hiding admin navigation are not access controls.
-Supabase advisor warnings for explicitly authenticated SECURITY DEFINER business RPCs require continued review of their role checks/search_path.
-
-## Verified release evidence
-Frontend commit 88be2c84f2decb558fb4a637e6a47a0c6996f233: Vercel production READY, deployment dpl_3ExUPYEQM68BTatjNVRBtmSpFrMq.
-GitHub Actions Product checks run 42066990853: success (npm ci, TypeScript, 52 Node tests, runtime dependency audit, production build).
-Local full npm audit: zero known advisories after updates; targeted ESLint passed.
-Isolated SQL: workspace isolation, approval immutability, activation rollback, MFA AAL1 denial/AAL2 acceptance/blocked profile denial passed.
-Live HTTP: /, /login, /admin, sitemap, robots and SVG return 200; unknown route 404; private routes return noindex; security headers present.
-Browser: landing and embedded demo render; anonymous /admin redirects to /login; title becomes Вход | IMORA.
-Hosted mandatory MFA migration applied; manage-users v7 ACTIVE with JWT verification. AAL1/AAL2 helper checks passed in a rolled-back read-only probe.
-Anonymous Data API reads: demo_requests/profiles expose 0 rows. Anonymous admin_mfa_verified and manage-users return 401. Signup remains disabled.
-Supabase advisors still warn on seven intentionally authenticated SECURITY DEFINER business functions and disabled leaked-password protection. These are not represented as a clean security report.
-Mandatory authenticator enrollment was subsequently removed at owner request. Real authenticated end-to-end acceptance remains pending.
-
-## Follow-up, 2026-11-06
-Owner rejected mandatory MFA. Removed the enrollment gate, restored password-based active SUPER_ADMIN checks on the server, and deployed manage-users v8 with JWT/role/status verification intact.
-Hosted migration: 20261106041320_remove_mandatory_admin_mfa. AAL1 active admin is accepted; blocked/unknown identities remain denied. Existing factors are not deleted.
-Workspace styling now follows the supplied reference: frosted architectural backdrop, floating sidebar and main panel, bright metric/budget tiles, orange selected navigation. Existing business data, permissions and navigation labels remain intact. Responsive and reduced-transparency fallbacks included.
-50 Node tests pass after removing the two mandatory-MFA cases; TypeScript, targeted ESLint and production build pass. Open launch blockers above remain outstanding. Repeat-request throttling was not deployed; CAPTCHA/rate limiting remain open.
+## Эксплуатация
+Публикация main запускает проверки GitHub и Vercel. Перед следующим релизом проверить их результат. Миграции базы — отдельный шаг; откат фронтенда не откатывает базу. История миграций синхронизирована с hosted Supabase. Не передавать service-role/почтовые ключи через VITE_* и не отправлять пароли через mailto.

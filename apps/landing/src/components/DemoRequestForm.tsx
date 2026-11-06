@@ -32,8 +32,9 @@ export default function DemoRequestForm() {
 
       if (rpcError) throw rpcError;
       setDone(true);
-    } catch {
-      setError('So‘rov yuborilmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.');
+    } catch (err) {
+      const limited = typeof err === 'object' && err !== null && 'code' in err && err.code === 'P0001';
+      setError(limited ? 'Bu kontakt uchun so‘rovlar chegarasiga yetdingiz. Bir soatdan keyin qayta urinib ko‘ring.' : 'So‘rov yuborilmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.');
     } finally {
       setLoading(false);
     }
